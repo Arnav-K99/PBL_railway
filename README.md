@@ -165,6 +165,6 @@ Status: Scheduled
 
 ```text
 Task T011 (Engineering, SEC-AB)
-Reason: Train conflict: Vande Bharat Express (TR-22436) operates in SEC-AB
+Reason: Train conflict: Vande Bharat Express (TR-22436)operates in SEC-AB
 (15:10 - 15:40) during available window BLK-102 (14:00 - 17:00).
 ```
