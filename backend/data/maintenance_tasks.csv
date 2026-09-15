@@ -1,0 +1,21 @@
+task_id,department,section,track,date,earliest_start,latest_end,duration,description
+T001,Engineering,Track 1,Track 1,2026-09-20,09:00,11:30,2.0,Deep screening and ballast tamping
+T002,Signal & Telecom,Track 1,Track 1,2026-09-20,09:15,11:00,1.5,Point machine testing and track circuit renewal
+T003,Traction,Track 1,Track 1,2026-09-20,09:30,11:45,2.0,OHE contact wire inspection and bracket overhaul
+T004,Engineering,Track 1,Track 1,2026-09-20,10:00,11:30,1.0,Rail fracture ultrasonic testing
+T005,Engineering,Track 2,Track 2,2026-09-20,13:00,15:30,2.5,Sleeper renewal and turnout realignment
+T006,Signal & Telecom,Track 2,Track 2,2026-09-20,13:15,15:00,1.5,Signal interlocking and axle counter testing
+T007,Traction,Track 2,Track 2,2026-09-20,13:30,15:30,2.0,Catenary wire tension adjustment
+T008,Engineering,Track 3,Track 3,2026-09-20,15:00,17:30,2.5,Bridge girder painting and track greasing
+T009,Signal & Telecom,Track 3,Track 3,2026-09-20,15:30,17:00,1.5,Electronic interlocking diagnostics
+T010,Traction,Track 3,Track 3,2026-09-20,15:00,17:00,2.0,Substation feeder breaker testing
+T011,Engineering,Track 1,Track 1,2026-09-20,14:00,16:30,2.0,Rail weld grinding
+T012,Signal & Telecom,Track 1,Track 1,2026-09-20,14:30,16:00,1.5,Level crossing gate signal calibration
+T013,Traction,Track 2,Track 2,2026-09-20,08:30,10:30,2.0,Isolator switch maintenance
+T014,Engineering,Track 3,Track 3,2026-09-20,10:00,12:30,2.0,Curve rail realignment
+T015,Engineering,Track 4,Track 4,2026-09-20,10:00,12:00,2.0,Track geometry inspection
+T016,Signal & Telecom,Track 1,Track 1,2026-09-20,18:00,20:30,2.0,Signal relay room wiring audit
+T017,Traction,Track 1,Track 1,2026-09-20,09:00,10:30,1.5,Neutral section inspection
+T018,Engineering,Track 2,Track 2,2026-09-20,14:00,15:30,1.5,Switch expansion joint adjustment
+T019,Signal & Telecom,Track 3,Track 3,2026-09-20,16:00,17:30,1.5,Audio frequency track circuit check
+T020,Traction,Track 3,Track 3,2026-09-20,23:00,01:00,2.0,Emergency tower wagon run
