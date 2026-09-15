@@ -6,16 +6,25 @@ import MaintenancePage from './components/MaintenancePage';
 import OptimizerPage from './components/OptimizerPage';
 import BlocksPage from './components/BlocksPage';
 
+import {
+  DEFAULT_TASKS,
+  DEFAULT_TRAINS,
+  DEFAULT_AVAILABLE_BLOCKS,
+  runLocalGreedyScheduler,
+} from './services/localData';
+
 export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
-  const [tasks, setTasks] = useState([]);
-  const [trains, setTrains] = useState([]);
-  const [availableBlocks, setAvailableBlocks] = useState([]);
-  const [scheduleResult, setScheduleResult] = useState(null);
+  const [tasks, setTasks] = useState(DEFAULT_TASKS);
+  const [trains, setTrains] = useState(DEFAULT_TRAINS);
+  const [availableBlocks, setAvailableBlocks] = useState(DEFAULT_AVAILABLE_BLOCKS);
+  const [scheduleResult, setScheduleResult] = useState(() =>
+    runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch initial operational data
+  // Fetch initial operational data (with fallback to client-side data for Netlify)
   useEffect(() => {
     async function loadData() {
       try {
@@ -27,18 +36,33 @@ export default function App() {
           fetch('/api/schedule', { method: 'POST' }),
         ]);
 
-        const tasksData = await tasksRes.json();
-        const trainsData = await trainsRes.json();
-        const blocksData = await blocksRes.json();
-        const schedData = await schedRes.json();
+        if (tasksRes.ok && trainsRes.ok && blocksRes.ok && schedRes.ok) {
+          const tasksData = await tasksRes.json();
+          const trainsData = await trainsRes.json();
+          const blocksData = await blocksRes.json();
+          const schedData = await schedRes.json();
 
-        setTasks(tasksData);
-        setTrains(trainsData);
-        setAvailableBlocks(blocksData);
-        setScheduleResult(schedData);
+          setTasks(tasksData);
+          setTrains(trainsData);
+          setAvailableBlocks(blocksData);
+          setScheduleResult(schedData);
+        } else {
+          // Running on static hosting (Netlify) without Python server
+          setTasks(DEFAULT_TASKS);
+          setTrains(DEFAULT_TRAINS);
+          setAvailableBlocks(DEFAULT_AVAILABLE_BLOCKS);
+          setScheduleResult(
+            runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+          );
+        }
       } catch (err) {
-        console.error('Error loading data:', err);
-        setError('Failed to connect to backend server. Verify that FastAPI is running on port 8000.');
+        // Fallback for Netlify / offline deployment
+        setTasks(DEFAULT_TASKS);
+        setTrains(DEFAULT_TRAINS);
+        setAvailableBlocks(DEFAULT_AVAILABLE_BLOCKS);
+        setScheduleResult(
+          runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+        );
       } finally {
         setLoading(false);
       }
@@ -91,11 +115,16 @@ export default function App() {
       setLoading(true);
       setError(null);
       const res = await fetch('/api/schedule', { method: 'POST' });
-      const data = await res.json();
-      setScheduleResult(data);
+      if (res.ok) {
+        const data = await res.json();
+        setScheduleResult(data);
+      } else {
+        const localSched = runLocalGreedyScheduler(tasks, trains, availableBlocks);
+        setScheduleResult(localSched);
+      }
     } catch (err) {
-      console.error(err);
-      setError('Failed to generate block plan. Check backend logs.');
+      const localSched = runLocalGreedyScheduler(tasks, trains, availableBlocks);
+      setScheduleResult(localSched);
     } finally {
       setLoading(false);
     }

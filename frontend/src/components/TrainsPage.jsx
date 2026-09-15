@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import StatusBadge from './StatusBadge';
+import { computeLocalTrafficDensity, DEFAULT_TRAINS } from '../services/localData';
 
 export default function TrainsPage({ trains }) {
   const [search, setSearch] = useState('');
   const [trackFilter, setTrackFilter] = useState('ALL');
-  const [densityList, setDensityList] = useState([]);
+  const [densityList, setDensityList] = useState(() =>
+    computeLocalTrafficDensity(trains?.length ? trains : DEFAULT_TRAINS)
+  );
   const [densityTrackFilter, setDensityTrackFilter] = useState('ALL');
 
   useEffect(() => {
     async function loadDensity() {
       try {
         const res = await fetch('/api/traffic-density');
-        const data = await res.json();
-        setDensityList(data);
+        if (res.ok) {
+          const data = await res.json();
+          setDensityList(data);
+        } else {
+          setDensityList(computeLocalTrafficDensity(trains?.length ? trains : DEFAULT_TRAINS));
+        }
       } catch (e) {
-        console.error('Failed to load traffic density', e);
+        setDensityList(computeLocalTrafficDensity(trains?.length ? trains : DEFAULT_TRAINS));
       }
     }
     loadDensity();
-  }, []);
+  }, [trains]);
 
   const filteredTrains = (trains || []).filter((train) => {
     const matchesSearch =
