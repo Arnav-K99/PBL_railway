@@ -24,7 +24,7 @@ export default function App() {
     runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
   );
   const [comparisonData, setComparisonData] = useState(() =>
-    runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+    runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'contested')
   );
   const [loading, setLoading] = useState(false);
   const [comparisonLoading, setComparisonLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function App() {
           fetch('/api/trains'),
           fetch('/api/available-blocks'),
           fetch('/api/schedule', { method: 'POST' }),
-          fetch('/api/compare-algorithms', { method: 'POST' }),
+          fetch('/api/compare-algorithms?scenario=contested', { method: 'POST' }),
         ]);
 
         if (tasksRes.ok && trainsRes.ok && blocksRes.ok && schedRes.ok) {
@@ -58,7 +58,7 @@ export default function App() {
             const compData = await compRes.json();
             setComparisonData(compData);
           } else {
-            setComparisonData(runLocalComparison(tasksData, trainsData, blocksData));
+            setComparisonData(runLocalComparison(tasksData, trainsData, blocksData, 'contested'));
           }
         } else {
           // Running on static hosting (Netlify) without Python server
@@ -69,7 +69,7 @@ export default function App() {
             runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
           );
           setComparisonData(
-            runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+            runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'contested')
           );
         }
       } catch {
@@ -81,7 +81,7 @@ export default function App() {
           runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
         );
         setComparisonData(
-          runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+          runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'contested')
         );
       } finally {
         setLoading(false);
@@ -151,7 +151,7 @@ export default function App() {
   };
 
   // Run Algorithm Comparison (Snapshot isolation - does not overwrite active scheduleResult)
-  const handleRunComparison = async (scenario = 'default') => {
+  const handleRunComparison = async (scenario = 'contested') => {
     try {
       setComparisonLoading(true);
       setError(null);

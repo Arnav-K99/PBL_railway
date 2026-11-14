@@ -936,7 +936,7 @@ export function runLocalComparison(
   tasks = DEFAULT_TASKS,
   trains = DEFAULT_TRAINS,
   availableBlocks = DEFAULT_AVAILABLE_BLOCKS,
-  scenario = 'default'
+  scenario = 'contested'
 ) {
   let inTasks = tasks;
   let inTrains = trains;

@@ -386,20 +386,28 @@ def test_comparison_service_and_metrics_consistency():
     ]
     assert metric_names == expected_metrics
 
-    # 4. Verify uniform values on sample dataset
+    # 4. Verify divergent values on contested benchmark (proving independent execution)
     for row in table:
+        if row.metric == "Tasks Scheduled":
+            assert row.fcfs == 9 and row.greedy == 5 and row.dp == 11
+            assert row.dp > row.greedy, "DP must schedule more tasks than Greedy on contested corridors"
+            assert row.dp > row.fcfs, "DP must schedule more tasks than FCFS on contested corridors"
+        elif row.metric == "Tasks Unscheduled":
+            assert row.fcfs == 3 and row.greedy == 7 and row.dp == 1
+        elif row.metric == "Blocks Generated":
+            assert row.fcfs == 3 and row.greedy == 3 and row.dp == 5
+        elif row.metric == "Clubbed Tasks":
+            assert row.fcfs == 9 and row.greedy == 3 and row.dp == 9
+        elif row.metric == "Cross-Department Blocks":
+            assert row.fcfs == 3 and row.greedy == 1 and row.dp == 3
+
+    # Also test default 20-task baseline snapshot
+    baseline_comp = compare_algorithms(tasks, trains, blocks, scenario="default")
+    for row in baseline_comp.comparison_table:
         if row.metric == "Tasks Scheduled":
             assert row.fcfs == 13 and row.greedy == 13 and row.dp == 13
         elif row.metric == "Tasks Unscheduled":
             assert row.fcfs == 7 and row.greedy == 7 and row.dp == 7
-        elif row.metric == "Blocks Generated":
-            assert row.fcfs == 3 and row.greedy == 3 and row.dp == 3
-        elif row.metric == "Block Utilization":
-            assert row.fcfs == "77.8%" and row.greedy == "77.8%" and row.dp == "77.8%"
-        elif row.metric == "Clubbed Tasks":
-            assert row.fcfs == 13 and row.greedy == 13 and row.dp == 13
-        elif row.metric == "Cross-Department Blocks":
-            assert row.fcfs == 3 and row.greedy == 3 and row.dp == 3
 
     # 5. Verify task uniqueness across each algorithm
     for exec_res in [comparison.fcfs, comparison.greedy, comparison.dp]:

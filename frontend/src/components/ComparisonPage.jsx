@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StatusBadge from './StatusBadge';
 import DeptBadge from './DeptBadge';
 
@@ -14,12 +14,19 @@ export default function ComparisonPage({
   loading = false,
   trains = [],
 }) {
-  const currentScenario = comparisonData?.scenario_id || 'default';
+  const currentScenario = comparisonData?.scenario_id || 'contested';
   const [selectedScenario, setSelectedScenario] = useState(currentScenario);
   const [activeTab, setActiveTab] = useState('dp'); // 'fcfs' | 'greedy' | 'dp'
   const [decisionTab, setDecisionTab] = useState('dp'); // 'fcfs' | 'greedy' | 'dp'
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [timelineTrack, setTimelineTrack] = useState('Track 1');
+
+  // Synchronize scenario state when comparisonData updates from backend
+  useEffect(() => {
+    if (comparisonData?.scenario_id) {
+      setSelectedScenario(comparisonData.scenario_id);
+    }
+  }, [comparisonData?.scenario_id]);
 
   // Handle scenario switch
   const handleScenarioChange = (scenarioId) => {
@@ -90,6 +97,15 @@ export default function ComparisonPage({
           {/* Scenario Selector Switcher */}
           <div className="scenario-selector">
             <button
+              id="btn-scenario-contested"
+              className={`scenario-btn ${selectedScenario === 'contested' ? 'active' : ''}`}
+              onClick={() => handleScenarioChange('contested')}
+              disabled={loading}
+              title="Multi-corridor competition benchmark proving DP superiority over Greedy and FCFS"
+            >
+              Stress Benchmark (Divergent)
+            </button>
+            <button
               id="btn-scenario-default"
               className={`scenario-btn ${selectedScenario === 'default' ? 'active' : ''}`}
               onClick={() => handleScenarioChange('default')}
@@ -97,15 +113,6 @@ export default function ComparisonPage({
               title="Official 20-Task PBL Baseline with hard corridor physical ceilings"
             >
               Default Dataset (20 Tasks)
-            </button>
-            <button
-              id="btn-scenario-contested"
-              className={`scenario-btn ${selectedScenario === 'contested' ? 'active' : ''}`}
-              onClick={() => handleScenarioChange('contested')}
-              disabled={loading}
-              title="Multi-corridor competition benchmark proving DP superiority over Greedy"
-            >
-              Contested Stress Benchmark
             </button>
           </div>
 
@@ -171,9 +178,9 @@ export default function ComparisonPage({
             1. Tasks Scheduled
           </div>
           <div className="kpi-number" style={{ fontSize: '22px', color: '#24613B', marginTop: '2px' }}>
-            {activeResult?.metrics?.tasks_scheduled ?? 13}
+            {activeResult?.metrics?.tasks_scheduled ?? '-'}
             <span style={{ fontSize: '11.5px', color: 'var(--c-text-secondary)', fontWeight: '500', marginLeft: '4px' }}>
-              / {comparisonData?.total_input_tasks || 20} ({Math.round(((activeResult?.metrics?.tasks_scheduled ?? 13) / (comparisonData?.total_input_tasks || 20)) * 100)}%)
+              / {comparisonData?.total_input_tasks ?? '-'} {activeResult?.metrics?.tasks_scheduled != null && comparisonData?.total_input_tasks ? `(${Math.round((activeResult.metrics.tasks_scheduled / comparisonData.total_input_tasks) * 100)}%)` : ''}
             </span>
           </div>
           <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
@@ -186,9 +193,9 @@ export default function ComparisonPage({
             2. Tasks Unscheduled
           </div>
           <div className="kpi-number" style={{ fontSize: '22px', color: '#B45309', marginTop: '2px' }}>
-            {activeResult?.metrics?.tasks_unscheduled ?? 7}
+            {activeResult?.metrics?.tasks_unscheduled ?? '-'}
             <span style={{ fontSize: '11.5px', color: 'var(--c-text-secondary)', fontWeight: '500', marginLeft: '4px' }}>
-              / {comparisonData?.total_input_tasks || 20}
+              / {comparisonData?.total_input_tasks ?? '-'}
             </span>
           </div>
           <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
@@ -201,9 +208,9 @@ export default function ComparisonPage({
             3. Blocks Generated
           </div>
           <div className="kpi-number" style={{ fontSize: '22px', color: 'var(--c-text-primary)', marginTop: '2px' }}>
-            {activeResult?.metrics?.blocks_generated ?? 3}
+            {activeResult?.metrics?.blocks_generated ?? '-'}
             <span style={{ fontSize: '11.5px', color: 'var(--c-text-secondary)', fontWeight: '500', marginLeft: '4px' }}>
-              / {comparisonData?.total_available_corridors || 7} corridors
+              / {comparisonData?.total_available_corridors ?? '-'} corridors
             </span>
           </div>
           <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
@@ -216,10 +223,10 @@ export default function ComparisonPage({
             4. Block Utilization
           </div>
           <div className="kpi-number" style={{ fontSize: '22px', color: '#2563EB', marginTop: '2px' }}>
-            {activeResult?.metrics?.active_block_utilization_pct ?? 77.8}%
+            {activeResult?.metrics?.active_block_utilization_pct ?? 0}%
           </div>
           <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
-            {activeResult?.metrics?.total_occupied_duration ?? 7.0}h active / scheduled capacity
+            {activeResult?.metrics?.total_occupied_duration ?? 0}h active / scheduled capacity
           </div>
         </div>
 
@@ -228,9 +235,9 @@ export default function ComparisonPage({
             5. Clubbing
           </div>
           <div className="kpi-number" style={{ fontSize: '22px', color: '#0D9488', marginTop: '2px' }}>
-            {activeResult?.metrics?.clubbed_tasks ?? 13}
+            {activeResult?.metrics?.clubbed_tasks ?? 0}
             <span style={{ fontSize: '11.5px', color: 'var(--c-text-secondary)', fontWeight: '500', marginLeft: '4px' }}>
-              tasks · {activeResult?.metrics?.cross_department_blocks ?? 3} blocks
+              tasks · {activeResult?.metrics?.cross_department_blocks ?? 0} blocks
             </span>
           </div>
           <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
@@ -693,7 +700,7 @@ export default function ComparisonPage({
                 setSelectedBlockId(null);
               }}
             >
-              FCFS Schedule ({comparisonData?.fcfs?.metrics?.tasks_scheduled || 13} tasks)
+              FCFS Schedule ({comparisonData?.fcfs?.metrics?.tasks_scheduled ?? '-'} tasks)
             </button>
             <button
               id="tab-greedy-inspect"
@@ -703,7 +710,7 @@ export default function ComparisonPage({
                 setSelectedBlockId(null);
               }}
             >
-              Greedy Schedule ({comparisonData?.greedy?.metrics?.tasks_scheduled || 13} tasks)
+              Greedy Schedule ({comparisonData?.greedy?.metrics?.tasks_scheduled ?? '-'} tasks)
             </button>
             <button
               id="tab-dp-inspect"
@@ -713,7 +720,7 @@ export default function ComparisonPage({
                 setSelectedBlockId(null);
               }}
             >
-              DP Schedule ({comparisonData?.dp?.metrics?.tasks_scheduled || 13} tasks)
+              DP Schedule ({comparisonData?.dp?.metrics?.tasks_scheduled ?? '-'} tasks)
             </button>
           </div>
         </div>

@@ -375,7 +375,7 @@ def compare_algorithms(
     tasks: List[MaintenanceTask],
     train_schedule: List[TrainSchedule],
     available_blocks: List[AvailableBlock],
-    scenario: str = "default",
+    scenario: str = "contested",
 ) -> AlgorithmComparisonResponse:
     """
     Runs FCFS, Greedy, and Dynamic Programming on identical isolated snapshots.

@@ -315,7 +315,7 @@ def create_custom_block(req: CreateBlockRequest):
 
 @app.get("/api/compare-algorithms", response_model=AlgorithmComparisonResponse)
 @app.post("/api/compare-algorithms", response_model=AlgorithmComparisonResponse)
-def compare_scheduling_algorithms(scenario: Optional[str] = "default"):
+def compare_scheduling_algorithms(scenario: Optional[str] = "contested"):
     """
     Executes empirical algorithm comparison:
     1. Takes an isolated snapshot of input data (tasks, trains, corridors).
@@ -327,7 +327,7 @@ def compare_scheduling_algorithms(scenario: Optional[str] = "default"):
         tasks = load_maintenance_tasks()
         trains = load_train_schedule()
         blocks = load_available_blocks()
-        return compare_algorithms(tasks, trains, blocks, scenario=scenario or "default")
+        return compare_algorithms(tasks, trains, blocks, scenario=scenario or "contested")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
