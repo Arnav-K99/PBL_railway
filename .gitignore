@@ -1,4 +1,5 @@
 # Environment & Virtual Environments
+venv
 venv/
 .env
 .env.*

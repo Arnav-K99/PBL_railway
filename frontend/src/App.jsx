@@ -5,23 +5,29 @@ import TrainsPage from './components/TrainsPage';
 import MaintenancePage from './components/MaintenancePage';
 import OptimizerPage from './components/OptimizerPage';
 import BlocksPage from './components/BlocksPage';
+import ComparisonPage from './components/ComparisonPage';
 
 import {
   DEFAULT_TASKS,
   DEFAULT_TRAINS,
   DEFAULT_AVAILABLE_BLOCKS,
   runLocalGreedyScheduler,
+  runLocalComparison,
 } from './services/localData';
 
 export default function App() {
-  const [activePage, setActivePage] = useState('dashboard');
+  const [activePage, setActivePage] = useState('comparison');
   const [tasks, setTasks] = useState(DEFAULT_TASKS);
   const [trains, setTrains] = useState(DEFAULT_TRAINS);
   const [availableBlocks, setAvailableBlocks] = useState(DEFAULT_AVAILABLE_BLOCKS);
   const [scheduleResult, setScheduleResult] = useState(() =>
     runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
   );
+  const [comparisonData, setComparisonData] = useState(() =>
+    runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+  );
   const [loading, setLoading] = useState(false);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Fetch initial operational data (with fallback to client-side data for Netlify)
@@ -29,11 +35,12 @@ export default function App() {
     async function loadData() {
       try {
         setLoading(true);
-        const [tasksRes, trainsRes, blocksRes, schedRes] = await Promise.all([
+        const [tasksRes, trainsRes, blocksRes, schedRes, compRes] = await Promise.all([
           fetch('/api/tasks'),
           fetch('/api/trains'),
           fetch('/api/available-blocks'),
           fetch('/api/schedule', { method: 'POST' }),
+          fetch('/api/compare-algorithms', { method: 'POST' }),
         ]);
 
         if (tasksRes.ok && trainsRes.ok && blocksRes.ok && schedRes.ok) {
@@ -46,6 +53,13 @@ export default function App() {
           setTrains(trainsData);
           setAvailableBlocks(blocksData);
           setScheduleResult(schedData);
+
+          if (compRes.ok) {
+            const compData = await compRes.json();
+            setComparisonData(compData);
+          } else {
+            setComparisonData(runLocalComparison(tasksData, trainsData, blocksData));
+          }
         } else {
           // Running on static hosting (Netlify) without Python server
           setTasks(DEFAULT_TASKS);
@@ -54,14 +68,20 @@ export default function App() {
           setScheduleResult(
             runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
           );
+          setComparisonData(
+            runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+          );
         }
-      } catch (err) {
+      } catch {
         // Fallback for Netlify / offline deployment
         setTasks(DEFAULT_TASKS);
         setTrains(DEFAULT_TRAINS);
         setAvailableBlocks(DEFAULT_AVAILABLE_BLOCKS);
         setScheduleResult(
           runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
+        );
+        setComparisonData(
+          runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
         );
       } finally {
         setLoading(false);
@@ -130,6 +150,27 @@ export default function App() {
     }
   };
 
+  // Run Algorithm Comparison (Snapshot isolation - does not overwrite active scheduleResult)
+  const handleRunComparison = async (scenario = 'default') => {
+    try {
+      setComparisonLoading(true);
+      setError(null);
+      const res = await fetch(`/api/compare-algorithms?scenario=${encodeURIComponent(scenario)}`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setComparisonData(data);
+      } else {
+        const localComp = runLocalComparison(tasks, trains, availableBlocks, scenario);
+        setComparisonData(localComp);
+      }
+    } catch {
+      const localComp = runLocalComparison(tasks, trains, availableBlocks, scenario);
+      setComparisonData(localComp);
+    } finally {
+      setComparisonLoading(false);
+    }
+  };
+
   return (
     <div className="app-layout">
       {/* Persistent Operations Sidebar */}
@@ -185,6 +226,15 @@ export default function App() {
               unscheduled={scheduleResult?.unscheduled || []}
               onGeneratePlan={handleGeneratePlan}
               loading={loading}
+            />
+          )}
+
+          {activePage === 'comparison' && (
+            <ComparisonPage
+              comparisonData={comparisonData}
+              onRunComparison={handleRunComparison}
+              loading={comparisonLoading}
+              trains={trains}
             />
           )}
         </main>

@@ -12,7 +12,10 @@ def load_maintenance_tasks(filepath: str = None) -> List[MaintenanceTask]:
     tasks = []
     with open(filepath, mode="r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
-        for row in reader:
+        for idx, row in enumerate(reader):
+            arr_h = 6 + (idx * 4) // 60
+            arr_m = (idx * 4) % 60
+            arr_time = row.get("arrival_time", "").strip() or f"{arr_h:02d}:{arr_m:02d}"
             tasks.append(
                 MaintenanceTask(
                     task_id=row["task_id"].strip(),
@@ -24,6 +27,7 @@ def load_maintenance_tasks(filepath: str = None) -> List[MaintenanceTask]:
                     latest_end=row["latest_end"].strip(),
                     duration=float(row["duration"].strip()),
                     description=row["description"].strip(),
+                    arrival_time=arr_time,
                 )
             )
     return tasks

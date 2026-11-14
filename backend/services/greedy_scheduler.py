@@ -12,7 +12,8 @@ DSA Concepts:
 5. Track Compatibility: Enforces both Section and Track matching (task.section == block.section and task.track == block.track).
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
+from services.sorting import merge_sort
 from models.schemas import (
     MaintenanceTask,
     TrainSchedule,
@@ -22,6 +23,7 @@ from models.schemas import (
     ScheduleMetrics,
     ScheduleResult,
     TrafficWindowDensity,
+    DecisionStep,
 )
 
 
@@ -137,28 +139,31 @@ def run_greedy_scheduler(
     tasks: List[MaintenanceTask],
     train_schedule: List[TrainSchedule],
     available_blocks: List[AvailableBlock],
-) -> ScheduleResult:
+    return_steps: bool = False,
+) -> Union[ScheduleResult, Tuple[ScheduleResult, List[DecisionStep]]]:
     """
     Core Greedy Scheduling Logic with Track Matching:
-    1. Sort tasks by earliest_start.
-    2. For each task:
-       a. Try to assign into an existing active block matching section AND track.
+    1. Sort tasks by earliest_start using Merge Sort (DSA: O(N log N)).
+    2. For each task sequentially:
+       a. Try to assign into an existing active block matching section AND track (Greedy local clubbing).
        b. If no active block fits, find an available block window on that section & track with no train conflict.
        c. If found, create a new active block and assign task.
        d. Otherwise, mark task as unscheduled with a descriptive reason.
     """
-    # Step 1: Sort tasks by earliest start time (DSA: O(N log N))
-    sorted_tasks = sorted(tasks, key=lambda t: time_to_minutes(t.earliest_start))
+    # Step 1: Sort tasks by earliest start time using Merge Sort (DSA: O(N log N))
+    sorted_tasks = merge_sort(tasks, key_fn=lambda t: time_to_minutes(t.earliest_start))
 
     active_blocks = []
     used_block_ids = set()
     unscheduled: List[UnscheduledTask] = []
+    decision_steps: List[DecisionStep] = []
 
     # Step 2: Iterate over sorted tasks (DSA: Greedy O(N * M))
-    for task in sorted_tasks:
+    for idx, task in enumerate(sorted_tasks):
         task_start_min = time_to_minutes(task.earliest_start)
         task_dur_min = int(task.duration * 60)
         assigned = False
+        start_label = f"Start: {task.earliest_start} (Pri #{idx+1})"
 
         # Step 3: Check existing active blocks first (matching section AND track)
         for block in active_blocks:
@@ -171,6 +176,18 @@ def run_greedy_scheduler(
                     # Simultaneous execution: duration is max of task durations
                     block["block_duration"] = max(block["block_duration"], task.duration)
                     assigned = True
+
+                    decision_steps.append(
+                        DecisionStep(
+                            step_number=idx + 1,
+                            entity_id=task.task_id,
+                            key_attribute=start_label,
+                            action="CLUBBED_INTO_EXISTING",
+                            block_id=block["block_id"],
+                            state_detail=f"Duration: {task.duration}h (Block max: {block['block_duration']}h)",
+                            rationale=f"Greedy rule: Earliest start ({task.earliest_start}) matches active block {block['block_id']} on {task.track}; clubbed to minimize new track possession",
+                        )
+                    )
                     break
 
         # Step 4: If not assigned to existing block, allocate new block from available windows
@@ -188,6 +205,16 @@ def run_greedy_scheduler(
 
                     if fits_in_window(task_start_min, task_dur_min, avail_start_min, avail_end_min):
                         found_available_window = True
+
+                        # Hard constraint: Cannot open overlapping block on the same physical track
+                        track_possession_conflict = any(
+                            b["track"] == avail.track
+                            and b["date"] == avail.date
+                            and is_overlapping(avail_start_min, avail_end_min, b["start_min"], b["end_min"])
+                            for b in active_blocks
+                        )
+                        if track_possession_conflict:
+                            continue
 
                         # Check train conflict on this specific track
                         conflict_train = find_train_conflict(
@@ -222,6 +249,18 @@ def run_greedy_scheduler(
                         active_blocks.append(new_block)
                         used_block_ids.add(avail.block_id)
                         assigned = True
+
+                        decision_steps.append(
+                            DecisionStep(
+                                step_number=idx + 1,
+                                entity_id=task.task_id,
+                                key_attribute=start_label,
+                                action="ALLOCATED_NEW_BLOCK",
+                                block_id=avail.block_id,
+                                state_detail=f"Window: {avail.start_time}-{avail.end_time} ({round(window_capacity, 1)}h)",
+                                rationale=f"Greedy rule: No active block fits {task.task_id}; opened earliest available corridor {avail.block_id} on {task.track}",
+                            )
+                        )
                         break
 
             # Step 5: If still unassigned, record detailed failure reason
@@ -242,6 +281,18 @@ def run_greedy_scheduler(
                     )
 
                 unscheduled.append(UnscheduledTask(task=task, reason=reason))
+
+                decision_steps.append(
+                    DecisionStep(
+                        step_number=idx + 1,
+                        entity_id=task.task_id,
+                        key_attribute=start_label,
+                        action="REJECTED",
+                        block_id=None,
+                        state_detail="Infeasible / Conflicted",
+                        rationale=reason,
+                    )
+                )
 
     # Convert active_blocks to ScheduledBlock schemas
     scheduled_blocks: List[ScheduledBlock] = []
@@ -296,8 +347,12 @@ def run_greedy_scheduler(
         avg_block_utilization=avg_utilization,
     )
 
-    return ScheduleResult(
+    res = ScheduleResult(
         blocks=scheduled_blocks,
         unscheduled=unscheduled,
         metrics=metrics,
     )
+
+    if return_steps:
+        return res, decision_steps
+    return res

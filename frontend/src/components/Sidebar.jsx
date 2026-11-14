@@ -7,6 +7,7 @@ export default function Sidebar({ activePage, setActivePage }) {
     { id: 'maintenance', label: 'Maintenance' },
     { id: 'optimizer', label: 'Optimizer' },
     { id: 'blocks', label: 'Blocks' },
+    { id: 'comparison', label: 'Algorithm Comparison' },
   ];
 
   return (

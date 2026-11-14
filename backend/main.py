@@ -18,6 +18,7 @@ from models.schemas import (
     CreateBlockRequest,
     CreateBlockResponse,
     TrafficWindowDensity,
+    AlgorithmComparisonResponse,
 )
 from services.data_loader import (
     load_maintenance_tasks,
@@ -31,6 +32,7 @@ from services.greedy_scheduler import (
     find_train_conflict,
     compute_traffic_density,
 )
+from services.comparison_service import compare_algorithms
 
 app = FastAPI(
     title="Railway Maintenance Block Planner (Track-Specific Operations)",
@@ -309,6 +311,25 @@ def create_custom_block(req: CreateBlockRequest):
         message=f"Block {new_scheduled_block.block_id} successfully created on {section} ({track}) from {target_block.start_time} to {target_block.end_time}.",
         block=new_scheduled_block,
     )
+
+
+@app.get("/api/compare-algorithms", response_model=AlgorithmComparisonResponse)
+@app.post("/api/compare-algorithms", response_model=AlgorithmComparisonResponse)
+def compare_scheduling_algorithms(scenario: Optional[str] = "default"):
+    """
+    Executes empirical algorithm comparison:
+    1. Takes an isolated snapshot of input data (tasks, trains, corridors).
+    2. Runs FCFS, Greedy, and Dynamic Programming (Weighted Interval Scheduling).
+    3. Computes the 5 core PBL comparison metrics with uniform formulas.
+    4. Does NOT mutate source data or overwrite CURRENT_SCHEDULE.
+    """
+    try:
+        tasks = load_maintenance_tasks()
+        trains = load_train_schedule()
+        blocks = load_available_blocks()
+        return compare_algorithms(tasks, trains, blocks, scenario=scenario or "default")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/metrics", response_model=ScheduleMetrics)

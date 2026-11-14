@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel, Field
 
 
@@ -12,6 +12,7 @@ class MaintenanceTask(BaseModel):
     latest_end: str
     duration: float  # hours
     description: str
+    arrival_time: Optional[str] = None  # Submission / queue arrival timestamp
 
 
 class TrainSchedule(BaseModel):
@@ -92,3 +93,62 @@ class CreateBlockResponse(BaseModel):
     block: Optional[ScheduledBlock] = None
     conflict_train: Optional[TrainSchedule] = None
     reason: Optional[str] = None
+
+
+class ComparisonMetricItem(BaseModel):
+    metric: str
+    fcfs: Any
+    greedy: Any
+    dp: Any
+    unit: str = ""
+    description: str = ""
+
+
+class AlgorithmComparisonMetrics(BaseModel):
+    tasks_scheduled: int
+    tasks_unscheduled: int
+    blocks_generated: int
+    block_utilization_pct: float
+    active_block_utilization_pct: float
+    total_occupied_duration: float
+    total_available_duration: float
+    clubbed_tasks: int
+    cross_department_blocks: int
+    department_consolidation: float
+
+
+class DecisionStep(BaseModel):
+    step_number: int
+    entity_id: str
+    key_attribute: str
+    action: str  # "ASSIGNED_TO_BLOCK", "CREATED_NEW_BLOCK", "REJECTED", "DP_INCLUDE", "DP_EXCLUDE"
+    block_id: Optional[str] = None
+    state_detail: Optional[str] = None
+    rationale: str
+
+
+class AlgorithmExecutionResult(BaseModel):
+    algorithm_key: str
+    algorithm_name: str
+    algorithm_description: str
+    blocks: List[ScheduledBlock]
+    unscheduled: List[UnscheduledTask]
+    metrics: AlgorithmComparisonMetrics
+    execution_time_ms: float
+    dsa_notes: List[str]
+    decision_steps: List[DecisionStep] = []
+
+
+class AlgorithmComparisonResponse(BaseModel):
+    scenario_id: str = "default"
+    scenario_name: str = "Official PBL Operations Snapshot (20 Tasks)"
+    operation_date: str = "2026-09-20"
+    execution_timestamp: str
+    snapshot_timestamp: str  # Kept for backward compatibility
+    total_input_tasks: int
+    total_input_trains: int
+    total_available_corridors: int
+    comparison_table: List[ComparisonMetricItem]
+    fcfs: AlgorithmExecutionResult
+    greedy: AlgorithmExecutionResult
+    dp: AlgorithmExecutionResult
