@@ -1303,9 +1303,9 @@ export default function ComparisonPage({
                   DP does not fall for Block 1's high individual score. Instead:<br />
                   1. It sorts candidate blocks by <strong>finish time</strong> (Block 2, Block 3, Block 4, Block 1, Block 5).<br />
                   2. It solves the Bellman recurrence: <strong>DP[i] = max( DP[i-1], R(i) + DP[p(i)] )</strong>.<br />
-                  3. When evaluating Block 1 ($R = 137$), DP computes $137 + 0 = 137 \le \text{DP}[3] = 195$. <strong>DP smartly EXCLUDES Block 1</strong> because the cumulative combination of shorter blocks already earns 195 points!<br />
+                  3. When evaluating Block 1 (R = 137), DP computes: 137 + 0 = 137 &le; DP[3] = 195. <strong>DP smartly EXCLUDES Block 1</strong> because the cumulative combination of shorter blocks already earns 195 points!<br />
                   4. At Block 5, DP achieves a maximum cumulative score of <strong>260 points</strong>.<br />
-                  5. DP then <strong>backtracks through predecessor pointers</strong> ($5 \to 4 \to 3 \to 2$), selecting Blocks 2, 3, 4, and 5!
+                  5. DP then <strong>backtracks through predecessor pointers</strong> (5 &rarr; 4 &rarr; 3 &rarr; 2), selecting Blocks 2, 3, 4, and 5!
                 </p>
               </div>
 

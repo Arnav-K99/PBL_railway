@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Component } from 'react';
 import Sidebar from './components/Sidebar';
 import OperationsCenter from './components/OperationsCenter';
 import MaintenancePage from './components/MaintenancePage';
@@ -15,6 +15,38 @@ import {
   runLocalGreedyScheduler,
   runLocalComparison,
 } from './services/localData';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('App Error caught by boundary:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '40px', maxWidth: '800px', margin: '40px auto', background: '#FEF2F2', border: '1px solid #F87171', borderRadius: '12px', color: '#991B1B' }}>
+          <h2 style={{ margin: '0 0 12px', fontSize: '20px', fontWeight: '800' }}>Dashboard Rendering Notice</h2>
+          <p style={{ margin: '0 0 16px', fontSize: '14px', lineHeight: 1.5 }}>
+            {this.state.error?.message || 'An error occurred during page rendering.'}
+          </p>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+            style={{ padding: '8px 16px', background: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer' }}
+          >
+            Reload Dashboard
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [activePage, setActivePage] = useState('comparison');
@@ -214,65 +246,67 @@ export default function App() {
         )}
 
         <main className="page-container">
-          {activePage === 'operations' && (
-            <OperationsCenter
-              trains={trains}
-              tasks={tasks}
-              scheduledBlocks={scheduleResult?.blocks || []}
-              metrics={scheduleResult?.metrics}
-              onGeneratePlan={handleGeneratePlan}
-              onNavigate={setActivePage}
-            />
-          )}
+          <ErrorBoundary>
+            {activePage === 'operations' && (
+              <OperationsCenter
+                trains={trains}
+                tasks={tasks}
+                scheduledBlocks={scheduleResult?.blocks || []}
+                metrics={scheduleResult?.metrics}
+                onGeneratePlan={handleGeneratePlan}
+                onNavigate={setActivePage}
+              />
+            )}
 
-          {activePage === 'dashboard' && (
-            <Dashboard
-              trains={trains}
-              tasks={tasks}
-              availableBlocks={availableBlocks}
-              scheduledBlocks={scheduleResult?.blocks || []}
-              metrics={scheduleResult?.metrics}
-            />
-          )}
+            {activePage === 'dashboard' && (
+              <Dashboard
+                trains={trains}
+                tasks={tasks}
+                availableBlocks={availableBlocks}
+                scheduledBlocks={scheduleResult?.blocks || []}
+                metrics={scheduleResult?.metrics}
+              />
+            )}
 
-          {activePage === 'trains' && (
-            <TrainsPage trains={trains} />
-          )}
+            {activePage === 'trains' && (
+              <TrainsPage trains={trains} />
+            )}
 
-          {activePage === 'maintenance' && (
-            <MaintenancePage
-              tasks={tasks}
-              scheduledTaskIds={scheduledTaskIds}
-              onAddTask={handleAddTask}
-            />
-          )}
+            {activePage === 'maintenance' && (
+              <MaintenancePage
+                tasks={tasks}
+                scheduledTaskIds={scheduledTaskIds}
+                onAddTask={handleAddTask}
+              />
+            )}
 
-          {activePage === 'optimizer' && (
-            <OptimizerPage
-              tasks={tasks}
-              scheduleResult={scheduleResult}
-              onGeneratePlan={handleGeneratePlan}
-              loading={loading}
-            />
-          )}
+            {activePage === 'optimizer' && (
+              <OptimizerPage
+                tasks={tasks}
+                scheduleResult={scheduleResult}
+                onGeneratePlan={handleGeneratePlan}
+                loading={loading}
+              />
+            )}
 
-          {activePage === 'blocks' && (
-            <BlocksPage
-              scheduledBlocks={scheduleResult?.blocks || []}
-              unscheduled={scheduleResult?.unscheduled || []}
-              onGeneratePlan={handleGeneratePlan}
-              loading={loading}
-            />
-          )}
+            {activePage === 'blocks' && (
+              <BlocksPage
+                scheduledBlocks={scheduleResult?.blocks || []}
+                unscheduled={scheduleResult?.unscheduled || []}
+                onGeneratePlan={handleGeneratePlan}
+                loading={loading}
+              />
+            )}
 
-          {activePage === 'comparison' && (
-            <ComparisonPage
-              comparisonData={comparisonData}
-              onRunComparison={handleRunComparison}
-              loading={comparisonLoading}
-              trains={trains}
-            />
-          )}
+            {activePage === 'comparison' && (
+              <ComparisonPage
+                comparisonData={comparisonData}
+                onRunComparison={handleRunComparison}
+                loading={comparisonLoading}
+                trains={trains}
+              />
+            )}
+          </ErrorBoundary>
         </main>
       </div>
     </div>
