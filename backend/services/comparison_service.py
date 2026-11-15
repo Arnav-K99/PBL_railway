@@ -974,7 +974,7 @@ def build_comparison_table(
             greedy=f"{greedy_metrics.active_block_utilization_pct}%",
             dp=f"{dp_metrics.active_block_utilization_pct}%",
             unit="%",
-            description="Active Block Utilization: Total occupied block duration / Total scheduled window capacity (7.0h / 9.0h)",
+            description="Active Block Utilization: Total occupied block duration / Total scheduled window capacity",
         ),
         ComparisonMetricItem(
             metric="Clubbed Tasks",
