@@ -1,200 +1,179 @@
 import React, { useState } from 'react';
 
-// Exact 7-Candidate Benchmark Data from Manipal University Jaipur PBL
-const SHOWCASE_CANDIDATES = [
+// ============================================================================
+// DATASET 1: THE 5-MAINTENANCE CONCRETE EXAMPLE (REQUESTED BY USER)
+// Demonstrates how Greedy picks the single highest-reward block and gets trapped,
+// while DP accumulates the cumulative best and backtracks the optimal feasible set.
+// ============================================================================
+const FIVE_BLOCKS_DATA = [
   {
-    id: 'BLK-D',
-    name: 'Candidate D',
+    id: 'BLK-1',
+    name: 'Block 1 (Greedy Bait)',
     start: '08:00',
-    end: '08:45',
-    finishIndex: 1,
-    durMin: 45,
-    tasks: 3,
-    depts: ['Engineering', 'Signal & Telecom', 'Traction'],
-    extraDepts: 2,
-    reward: 375, // 120*3 + 8*2 - 1
-    predIndex: 0,
-    predName: 'Base (0)',
-    taskNames: ['Switch Diamond Crossing Tamp', 'Point Motor Interlock Test', 'OHE Insulator Inspection'],
-  },
-  {
-    id: 'BLK-B',
-    name: 'Candidate B',
-    start: '08:30',
-    end: '09:45',
-    finishIndex: 2,
-    durMin: 75,
-    tasks: 1,
-    depts: ['Engineering'],
-    extraDepts: 0,
-    reward: 119, // 120*1 + 0 - 1
-    predIndex: 0,
-    predName: 'Base (0)',
-    taskNames: ['Ultrasonic Rail Flaw Detection'],
-  },
-  {
-    id: 'BLK-E',
-    name: 'Candidate E',
-    start: '09:00',
-    end: '09:45',
-    finishIndex: 3,
-    durMin: 45,
-    tasks: 1,
-    depts: ['Traction'],
-    extraDepts: 0,
-    reward: 119, // 120*1 + 0 - 1
-    predIndex: 1, // D ends at 08:45 <= E starts at 09:00
-    predName: 'BLK-D',
-    taskNames: ['Contact Wire Dropper Replacement'],
-  },
-  {
-    id: 'BLK-F',
-    name: 'Candidate F',
-    start: '10:00',
-    end: '10:45',
-    finishIndex: 4,
-    durMin: 45,
-    tasks: 1,
-    depts: ['Engineering'],
-    extraDepts: 0,
-    reward: 119, // 120*1 + 0 - 1
-    predIndex: 3, // E ends at 09:45 <= F starts at 10:00
-    predName: 'BLK-E',
-    taskNames: ['Fastener Replacement & Torque Check'],
-  },
-  {
-    id: 'BLK-C',
-    name: 'Candidate C',
-    start: '10:00',
     end: '11:30',
-    finishIndex: 5,
-    durMin: 90,
-    tasks: 1,
-    depts: ['Signal & Telecom'],
-    extraDepts: 0,
-    reward: 119, // 120*1 + 0 - 1
-    predIndex: 3, // E ends at 09:45 <= C starts at 10:00
-    predName: 'BLK-E',
-    taskNames: ['Digital Axle Counter Calibration'],
-  },
-  {
-    id: 'BLK-G',
-    name: 'Candidate G',
-    start: '11:00',
-    end: '11:45',
-    finishIndex: 6,
-    durMin: 45,
-    tasks: 1,
-    depts: ['Signal & Telecom'],
-    extraDepts: 0,
-    reward: 119, // 120*1 + 0 - 1
-    predIndex: 4, // F ends at 10:45 <= G starts at 11:00
-    predName: 'BLK-F',
-    taskNames: ['Color Light Signal Aspect Calibration'],
-  },
-  {
-    id: 'BLK-A',
-    name: 'Candidate A',
-    start: '07:45',
-    end: '12:15',
-    finishIndex: 7,
-    durMin: 270,
+    startMin: 480,
+    endMin: 690,
+    durMin: 210,
+    durHours: 3.5,
     tasks: 2,
     depts: ['Engineering', 'Signal & Telecom'],
     extraDepts: 1,
-    reward: 247, // 120*2 + 8*1 - 1
-    predIndex: 0,
-    predName: 'Base (0)',
-    taskNames: ['CWR Stress Relief & Track Realignment', 'Main Track Circuit Overhaul'],
+    reward: 137, // M=5: alpha=66, beta=6 -> 66*2 + 6*1 - 1 = 137
+    description: 'Track Realignment & Main S&T Calibration',
+    whyGreedy: 'Highest individual block reward (137 pts). Greedy commits it myopically.',
+    color: '#F59E0B',
+  },
+  {
+    id: 'BLK-2',
+    name: 'Block 2',
+    start: '08:00',
+    end: '08:50',
+    startMin: 480,
+    endMin: 530,
+    durMin: 50,
+    durHours: 0.83,
+    tasks: 1,
+    depts: ['Engineering'],
+    extraDepts: 0,
+    reward: 65, // 66*1 + 0 - 1 = 65
+    description: 'Ultrasonic Rail Flaw Detection',
+    color: '#10B981',
+  },
+  {
+    id: 'BLK-3',
+    name: 'Block 3',
+    start: '09:00',
+    end: '09:50',
+    startMin: 540,
+    endMin: 590,
+    durMin: 50,
+    durHours: 0.83,
+    tasks: 1,
+    depts: ['Signal & Telecom'],
+    extraDepts: 0,
+    reward: 65, // 66*1 + 0 - 1 = 65
+    description: 'Point Motor Interlock Test',
+    color: '#10B981',
+  },
+  {
+    id: 'BLK-4',
+    name: 'Block 4',
+    start: '10:00',
+    end: '10:50',
+    startMin: 600,
+    endMin: 650,
+    durMin: 50,
+    durHours: 0.83,
+    tasks: 1,
+    depts: ['Traction'],
+    extraDepts: 0,
+    reward: 65, // 66*1 + 0 - 1 = 65
+    description: 'OHE Catenary Section Insulator Check',
+    color: '#10B981',
+  },
+  {
+    id: 'BLK-5',
+    name: 'Block 5',
+    start: '11:00',
+    end: '11:50',
+    startMin: 660,
+    endMin: 710,
+    durMin: 50,
+    durHours: 0.83,
+    tasks: 1,
+    depts: ['Engineering'],
+    extraDepts: 0,
+    reward: 65, // 66*1 + 0 - 1 = 65
+    description: 'Track Fastener Torque & Ballast Tamp',
+    color: '#10B981',
   },
 ];
 
-// Step-by-step DP Table derivation
-const DP_STEPS = [
+// The 5-block DP table sorted by finish time:
+// 1: BLK-2 (finish 08:50, R=65, p=0) -> DP[1] = 65
+// 2: BLK-3 (finish 09:50, R=65, p=1 [BLK-2]) -> DP[2] = 65 + 65 = 130
+// 3: BLK-4 (finish 10:50, R=65, p=2 [BLK-3]) -> DP[3] = 65 + 130 = 195
+// 4: BLK-1 (finish 11:30, R=137, p=0) -> max(195, 137+0) = 195 (Skip BLK-1!)
+// 5: BLK-5 (finish 11:50, R=65, p=3 [BLK-4]) -> max(195, 65+195) = 260 (Take BLK-5)
+const FIVE_BLOCKS_DP_STEPS = [
   {
-    i: 1,
-    candidate: 'BLK-D',
-    ri: 375,
-    pred: '0',
+    step: 1,
+    block: 'Block 2',
+    time: '08:00 – 08:50',
+    reward: 65,
+    pred: 'Base 0',
     predVal: 0,
-    incl: 375,
+    incl: 65,
     excl: 0,
-    dpVal: 375,
+    dpVal: 65,
     action: 'INCLUDE',
-    reason: 'R(D) + DP[0] = 375 > DP[0]=0 -> Take D',
+    reason: 'R(2) + DP[0] = 65 > 0 -> Commit to subproblem',
   },
   {
-    i: 2,
-    candidate: 'BLK-B',
-    ri: 119,
-    pred: '0',
+    step: 2,
+    block: 'Block 3',
+    time: '09:00 – 09:50',
+    reward: 65,
+    pred: 'Block 2 (p=1)',
+    predVal: 65,
+    incl: 130,
+    excl: 65,
+    dpVal: 130,
+    action: 'INCLUDE',
+    reason: 'R(3) + DP[1] = 65 + 65 = 130 > 65 -> Commit to subproblem',
+  },
+  {
+    step: 3,
+    block: 'Block 4',
+    time: '10:00 – 10:50',
+    reward: 65,
+    pred: 'Block 3 (p=2)',
+    predVal: 130,
+    incl: 195,
+    excl: 130,
+    dpVal: 195,
+    action: 'INCLUDE',
+    reason: 'R(4) + DP[2] = 65 + 130 = 195 > 130 -> Commit to subproblem',
+  },
+  {
+    step: 4,
+    block: 'Block 1',
+    time: '08:00 – 11:30',
+    reward: 137,
+    pred: 'Base 0 (p=0)',
     predVal: 0,
-    incl: 119,
-    excl: 375,
-    dpVal: 375,
+    incl: 137,
+    excl: 195,
+    dpVal: 195,
     action: 'EXCLUDE',
-    reason: 'R(B) + DP[0] = 119 <= DP[1]=375 -> Skip B',
+    reason: 'R(1) + DP[0] = 137 <= DP[3]=195 -> EXCLUDED! (Cumulative combination already beats it)',
   },
   {
-    i: 3,
-    candidate: 'BLK-E',
-    ri: 119,
-    pred: '1 (D)',
-    predVal: 375,
-    incl: 494,
-    excl: 375,
-    dpVal: 494,
+    step: 5,
+    block: 'Block 5',
+    time: '11:00 – 11:50',
+    reward: 65,
+    pred: 'Block 4 (p=3)',
+    predVal: 195,
+    incl: 260,
+    excl: 195,
+    dpVal: 260,
     action: 'INCLUDE',
-    reason: 'R(E) + DP[D] = 119 + 375 = 494 > DP[2]=375 -> Take E',
+    reason: 'R(5) + DP[3] = 65 + 195 = 260 > 195 -> Commit to optimal solution',
   },
-  {
-    i: 4,
-    candidate: 'BLK-F',
-    ri: 119,
-    pred: '3 (E)',
-    predVal: 494,
-    incl: 613,
-    excl: 494,
-    dpVal: 613,
-    action: 'INCLUDE',
-    reason: 'R(F) + DP[E] = 119 + 494 = 613 > DP[3]=494 -> Take F',
-  },
-  {
-    i: 5,
-    candidate: 'BLK-C',
-    ri: 119,
-    pred: '3 (E)',
-    predVal: 494,
-    incl: 613,
-    excl: 613,
-    dpVal: 613,
-    action: 'EXCLUDE',
-    reason: 'R(C) + DP[E] = 119 + 494 = 613 <= DP[4]=613 -> Skip C',
-  },
-  {
-    i: 6,
-    candidate: 'BLK-G',
-    ri: 119,
-    pred: '4 (F)',
-    predVal: 613,
-    incl: 732,
-    excl: 613,
-    dpVal: 732,
-    action: 'INCLUDE',
-    reason: 'R(G) + DP[F] = 119 + 613 = 732 > DP[5]=613 -> Take G',
-  },
-  {
-    i: 7,
-    candidate: 'BLK-A',
-    ri: 247,
-    pred: '0',
-    predVal: 0,
-    incl: 247,
-    excl: 732,
-    dpVal: 732,
-    action: 'EXCLUDE',
-    reason: 'R(A) + DP[0] = 247 <= DP[6]=732 -> Skip A (Optimal: 732)',
-  },
+];
+
+// ============================================================================
+// DATASET 2: THE 7-CANDIDATE CORRIDOR BENCHMARK (FROM PRESENTATION SLIDE 5)
+// ============================================================================
+const SLIDE_CANDIDATES = [
+  { id: 'BLK-A', name: 'Candidate A', start: '07:45', end: '12:15', tasks: 2, depts: 'Eng. + S&T', cb: 1, reward: 247, interp: '2 tasks + 1 dept bonus − 1' },
+  { id: 'BLK-B', name: 'Candidate B', start: '08:30', end: '09:45', tasks: 1, depts: '1 department', cb: 0, reward: 119, interp: '1 task − 1 block' },
+  { id: 'BLK-C', name: 'Candidate C', start: '10:00', end: '11:30', tasks: 1, depts: '1 department', cb: 0, reward: 119, interp: '1 task − 1 block' },
+  { id: 'BLK-D', name: 'Candidate D', start: '08:00', end: '08:45', tasks: 3, depts: 'Eng. + S&T + Traction', cb: 2, reward: 375, interp: '3 tasks + 2 dept bonus − 1' },
+  { id: 'BLK-E', name: 'Candidate E', start: '09:00', end: '09:45', tasks: 1, depts: '1 department', cb: 0, reward: 119, interp: '1 task − 1 block' },
+  { id: 'BLK-F', name: 'Candidate F', start: '10:00', end: '10:45', tasks: 1, depts: '1 department', cb: 0, reward: 119, interp: '1 task − 1 block' },
+  { id: 'BLK-G', name: 'Candidate G', start: '11:00', end: '11:45', tasks: 1, depts: '1 department', cb: 0, reward: 119, interp: '1 task − 1 block' },
 ];
 
 export default function ComparisonPage({
@@ -204,8 +183,10 @@ export default function ComparisonPage({
 }) {
   const currentScenario = comparisonData?.scenario_id || 'default';
   const [selectedScenario, setSelectedScenario] = useState(currentScenario);
-  const [simMode, setSimMode] = useState('dp'); // 'dp' | 'greedy'
-  const [backtrackStep, setBacktrackStep] = useState(4); // 1..4 for interactive reconstruction
+
+  // Reward Simulator State
+  const [rewardTab, setRewardTab] = useState('five_blocks'); // 'five_blocks' | 'slide_showcase'
+  const [fiveSimMode, setFiveSimMode] = useState('dp'); // 'greedy' | 'dp'
 
   const handleScenarioChange = (scenarioId) => {
     setSelectedScenario(scenarioId);
@@ -240,33 +221,6 @@ export default function ComparisonPage({
   };
 
   const totalTasks = comparisonData?.total_input_tasks || 20;
-
-  // Exact PBL Mathematical Reward System:
-  // R(B) = alpha * T_B + beta * C_B - 1
-  // Where M = 7 -> beta = 8 -> alpha = 120
-  const M = 7;
-  const beta = M + 1; // 8
-  const alpha = 2 * M * beta + M + 1; // 120
-
-  const calculatePBLReward = (taskCount, extraDeptCount, blockCount) => {
-    if (taskCount === 0) return 0;
-    return alpha * taskCount + beta * extraDeptCount - blockCount;
-  };
-
-  const isShowcase = selectedScenario === 'showcase';
-  const fcfsReward = isShowcase
-    ? 238
-    : calculatePBLReward(fcfs.tasks_scheduled, Math.max(0, fcfs.cross_department_blocks), fcfs.blocks_generated);
-  const greedyReward = isShowcase
-    ? 247
-    : calculatePBLReward(greedy.tasks_scheduled, Math.max(0, greedy.cross_department_blocks), greedy.blocks_generated);
-  const dpReward = isShowcase
-    ? 732
-    : calculatePBLReward(dp.tasks_scheduled, Math.max(0, dp.cross_department_blocks), dp.blocks_generated);
-
-  const maxReward = Math.max(fcfsReward, greedyReward, dpReward, 1);
-  const rewardDelta = dpReward - greedyReward;
-  const rewardDeltaPct = greedyReward > 0 ? (((dpReward - greedyReward) / greedyReward) * 100).toFixed(1) : '100.0';
 
   // Bar Graph Metric Groups
   const barMetrics = [
@@ -888,8 +842,8 @@ export default function ComparisonPage({
       </div>
 
       {/* =========================================================================
-          5. THE PBL REWARD SYSTEM & LIVE BACKTRACKING SIMULATOR
-             (Placed below the graphs and tables as requested)
+          5. THE REWARD SYSTEM & LIVE BACKTRACKING SIMULATOR
+             (Positioned cleanly below the graphs and tables)
           ========================================================================= */}
       <div
         style={{
@@ -900,448 +854,576 @@ export default function ComparisonPage({
           overflow: 'hidden',
         }}
       >
-        {/* Slide Title Header */}
-        <div style={{ padding: '24px 28px 18px', borderBottom: '1px solid #F1F5F9' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '18px' }}>⚡</span>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
-              The reward system prioritizes task coverage, then clubbing, then fewer blocks
-            </h2>
+        {/* Header & Sub-Tab Switcher */}
+        <div
+          style={{
+            padding: '22px 28px 16px',
+            borderBottom: '1px solid #F1F5F9',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '14px',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>⚡</span>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+                Live Reward System: Greedy Trap vs. DP Cumulative Backtracking
+              </h2>
+            </div>
+            <div style={{ fontSize: '12px', color: '#64748B', marginTop: '3px' }}>
+              See how Greedy chooses the single highest individual reward block, while DP backtracks the cumulative best feasible blocks
+            </div>
           </div>
-          <div style={{ fontSize: '12.5px', color: '#64748B' }}>
-            The score is an internal scheduling objective — it is not a monetary value, safety score or observed performance statistic.
+
+          {/* Tab Switcher */}
+          <div style={{ display: 'flex', background: '#F1F5F9', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+            <button
+              onClick={() => setRewardTab('five_blocks')}
+              style={{
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '7px',
+                fontSize: '12px',
+                fontWeight: rewardTab === 'five_blocks' ? '800' : '600',
+                color: rewardTab === 'five_blocks' ? '#0F172A' : '#64748B',
+                background: rewardTab === 'five_blocks' ? '#FFFFFF' : 'transparent',
+                boxShadow: rewardTab === 'five_blocks' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                cursor: 'pointer',
+              }}
+            >
+              5-Maintenance Live Example
+            </button>
+            <button
+              onClick={() => setRewardTab('slide_showcase')}
+              style={{
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '7px',
+                fontSize: '12px',
+                fontWeight: rewardTab === 'slide_showcase' ? '800' : '600',
+                color: rewardTab === 'slide_showcase' ? '#0F172A' : '#64748B',
+                background: rewardTab === 'slide_showcase' ? '#FFFFFF' : 'transparent',
+                boxShadow: rewardTab === 'slide_showcase' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Slide 5 Formal Reference (M=7)
+            </button>
           </div>
         </div>
 
-        {/* 3 Architecture Cards (Side-by-side grid, exactly matching the slide layout) */}
-        <div style={{ padding: '24px 28px', display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '18px' }}>
-          {/* Card 1: CANDIDATE-BLOCK REWARD (Dark Slate Blue) */}
-          <div
-            style={{
-              background: '#1E293B',
-              color: '#FFFFFF',
-              borderRadius: '12px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94A3B8', fontWeight: '800', marginBottom: '8px' }}>
-                CANDIDATE-BLOCK REWARD
-              </div>
-              <div style={{ fontSize: '22px', fontWeight: '800', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em', marginBottom: '10px' }}>
-                R(B) = α × T<sub>β</sub> + β × C<sub>β</sub> − 1
-              </div>
-              <div style={{ fontSize: '11px', color: '#CBD5E1', marginBottom: '16px', fontFamily: 'var(--font-mono)' }}>
-                <div>T<sub>β</sub> = unique tasks in block B</div>
-                <div>C<sub>β</sub> = max(0, distinct departments in B − 1)</div>
+        {/* TAB 1: 5-MAINTENANCE LIVE PRACTICAL EXAMPLE */}
+        {rewardTab === 'five_blocks' && (
+          <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Context & Formula for M=5 */}
+            <div
+              style={{
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#047857', fontWeight: '800' }}>
+                  PBL FORMULA FOR M = 5 FEASIBLE CANDIDATE BLOCKS
+                </div>
+                <div style={{ fontSize: '15px', fontWeight: '900', color: '#0F172A', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                  β = M + 1 = 6 &nbsp;·&nbsp; α = 2Mβ + M + 1 = 66 &nbsp;·&nbsp; R(B) = 66 × T<sub>β</sub> + 6 × C<sub>β</sub> − 1
+                </div>
               </div>
 
-              {/* Numbered Priorities */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '11.5px', lineHeight: 1.45 }}>
-                  <span style={{ background: '#334155', color: '#F8FAFC', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '11px', flexShrink: 0 }}>
-                    1
-                  </span>
-                  <div>
-                    <strong style={{ color: '#F8FAFC' }}>TASK COVERAGE:</strong> Each unique scheduled task adds α. This is the highest-priority objective.
+              {/* Mode Toggle for the 5-Block Example */}
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={() => setFiveSimMode('greedy')}
+                  style={{
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    background: fiveSimMode === 'greedy' ? '#F59E0B' : '#FFFFFF',
+                    color: fiveSimMode === 'greedy' ? '#FFFFFF' : '#D97706',
+                    boxShadow: fiveSimMode === 'greedy' ? '0 2px 6px rgba(245, 158, 11, 0.3)' : '0 1px 2px rgba(0,0,0,0.05)',
+                    border: fiveSimMode === 'greedy' ? 'none' : '1px solid #CBD5E1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>🔴 How Greedy Chooses (R = 137)</span>
+                </button>
+                <button
+                  onClick={() => setFiveSimMode('dp')}
+                  style={{
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    background: fiveSimMode === 'dp' ? '#10B981' : '#FFFFFF',
+                    color: fiveSimMode === 'dp' ? '#FFFFFF' : '#059669',
+                    boxShadow: fiveSimMode === 'dp' ? '0 2px 6px rgba(16, 185, 129, 0.3)' : '0 1px 2px rgba(0,0,0,0.05)',
+                    border: fiveSimMode === 'dp' ? 'none' : '1px solid #CBD5E1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>🟢 How DP Backtracks (R = 260)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Visual 5-Block Physical Timeline Representation (08:00 to 12:00) */}
+            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A' }}>
+                  Track Possession Timeline · Section Panipat (Track 1): 08:00 – 12:00
+                </span>
+                <span style={{ fontSize: '11px', color: '#64748B' }}>
+                  Total Available Window: 240 minutes
+                </span>
+              </div>
+
+              {/* Time axis ruler */}
+              <div style={{ position: 'relative', height: '20px', borderBottom: '1px solid #CBD5E1', marginBottom: '12px', fontSize: '10.5px', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
+                <span style={{ position: 'absolute', left: '0%' }}>08:00</span>
+                <span style={{ position: 'absolute', left: '21%' }}>08:50</span>
+                <span style={{ position: 'absolute', left: '25%' }}>09:00</span>
+                <span style={{ position: 'absolute', left: '46%' }}>09:50</span>
+                <span style={{ position: 'absolute', left: '50%' }}>10:00</span>
+                <span style={{ position: 'absolute', left: '71%' }}>10:50</span>
+                <span style={{ position: 'absolute', left: '75%' }}>11:00</span>
+                <span style={{ position: 'absolute', left: '88%' }}>11:30</span>
+                <span style={{ position: 'absolute', left: '96%' }}>11:50</span>
+              </div>
+
+              {/* Physical Track Lanes */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                {/* Block 1 (Greedy Bait) */}
+                <div style={{ position: 'relative', height: '38px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid #F1F5F9' }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '0%',
+                      width: '87.5%', // 210 min / 240 min = 87.5%
+                      height: '100%',
+                      background: fiveSimMode === 'greedy' ? '#F59E0B' : '#F1F5F9',
+                      border: fiveSimMode === 'greedy' ? '2px solid #D97706' : '1px dashed #CBD5E1',
+                      borderRadius: '6px',
+                      color: fiveSimMode === 'greedy' ? '#FFFFFF' : '#94A3B8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0 12px',
+                      fontSize: '11.5px',
+                      fontWeight: '800',
+                      transition: 'all 0.3s ease',
+                      boxShadow: fiveSimMode === 'greedy' ? '0 2px 8px rgba(245, 158, 11, 0.25)' : 'none',
+                    }}
+                  >
+                    <span>
+                      {fiveSimMode === 'greedy' ? '★ GREEDY PICK: ' : 'EXCLUDED BY DP: '}
+                      Block 1 (08:00 – 11:30 · 3.5 hrs · 2 Tasks)
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>R = 137 pts</span>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '11.5px', lineHeight: 1.45 }}>
-                  <span style={{ background: '#334155', color: '#F8FAFC', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '11px', flexShrink: 0 }}>
-                    2
-                  </span>
-                  <div>
-                    <strong style={{ color: '#F8FAFC' }}>DEPARTMENT CLUBBING:</strong> Each additional department beyond the first adds β. A 3-department block earns 2 clubbing units.
+                {/* Sub-Blocks: 2, 3, 4, 5 */}
+                <div style={{ position: 'relative', height: '38px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid #F1F5F9' }}>
+                  {/* Block 2 (08:00 - 08:50) */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '0%',
+                      width: '20.8%', // 50 min / 240 min
+                      height: '100%',
+                      background: fiveSimMode === 'dp' ? '#10B981' : '#FEE2E2',
+                      border: fiveSimMode === 'dp' ? '2px solid #059669' : '1px dashed #EF4444',
+                      borderRadius: '6px',
+                      color: fiveSimMode === 'dp' ? '#FFFFFF' : '#991B1B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      transition: 'all 0.3s ease',
+                      boxShadow: fiveSimMode === 'dp' ? '0 2px 6px rgba(16, 185, 129, 0.25)' : 'none',
+                    }}
+                  >
+                    {fiveSimMode === 'dp' ? '✔ Block 2 (65)' : '❌ Collided'}
                   </div>
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '11.5px', lineHeight: 1.45 }}>
-                  <span style={{ background: '#334155', color: '#F8FAFC', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '11px', flexShrink: 0 }}>
-                    3
-                  </span>
-                  <div>
-                    <strong style={{ color: '#F8FAFC' }}>BLOCK ECONOMY:</strong> Each selected block incurs a −1 penalty, preferring fewer blocks only after the first two priorities tie.
+                  {/* Block 3 (09:00 - 09:50) */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '25%', // 60 min / 240 min
+                      width: '20.8%',
+                      height: '100%',
+                      background: fiveSimMode === 'dp' ? '#10B981' : '#FEE2E2',
+                      border: fiveSimMode === 'dp' ? '2px solid #059669' : '1px dashed #EF4444',
+                      borderRadius: '6px',
+                      color: fiveSimMode === 'dp' ? '#FFFFFF' : '#991B1B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      transition: 'all 0.3s ease',
+                      boxShadow: fiveSimMode === 'dp' ? '0 2px 6px rgba(16, 185, 129, 0.25)' : 'none',
+                    }}
+                  >
+                    {fiveSimMode === 'dp' ? '✔ Block 3 (65)' : '❌ Collided'}
+                  </div>
+
+                  {/* Block 4 (10:00 - 10:50) */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '50%', // 120 min / 240 min
+                      width: '20.8%',
+                      height: '100%',
+                      background: fiveSimMode === 'dp' ? '#10B981' : '#FEE2E2',
+                      border: fiveSimMode === 'dp' ? '2px solid #059669' : '1px dashed #EF4444',
+                      borderRadius: '6px',
+                      color: fiveSimMode === 'dp' ? '#FFFFFF' : '#991B1B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      transition: 'all 0.3s ease',
+                      boxShadow: fiveSimMode === 'dp' ? '0 2px 6px rgba(16, 185, 129, 0.25)' : 'none',
+                    }}
+                  >
+                    {fiveSimMode === 'dp' ? '✔ Block 4 (65)' : '❌ Collided'}
+                  </div>
+
+                  {/* Block 5 (11:00 - 11:50) */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '75%', // 180 min / 240 min
+                      width: '20.8%',
+                      height: '100%',
+                      background: fiveSimMode === 'dp' ? '#10B981' : '#FEE2E2',
+                      border: fiveSimMode === 'dp' ? '2px solid #059669' : '1px dashed #EF4444',
+                      borderRadius: '6px',
+                      color: fiveSimMode === 'dp' ? '#FFFFFF' : '#991B1B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      transition: 'all 0.3s ease',
+                      boxShadow: fiveSimMode === 'dp' ? '0 2px 6px rgba(16, 185, 129, 0.25)' : 'none',
+                    }}
+                  >
+                    {fiveSimMode === 'dp' ? '✔ Block 5 (65)' : '❌ Collided'}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Card 2: HOW α AND β ARE CHOSEN (Warm Sand/Peach) */}
-          <div
-            style={{
-              background: '#FFF5EB',
-              border: '1px solid #FED7AA',
-              borderRadius: '12px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#C2410C', fontWeight: '800', marginBottom: '8px' }}>
-                HOW α AND β ARE CHOSEN
-              </div>
-              <div style={{ fontSize: '12.5px', color: '#9A3412', fontWeight: '700', marginBottom: '6px' }}>
-                Let M = number of feasible candidate blocks.
-              </div>
-              <div style={{ fontSize: '11.5px', color: '#7C2D12', lineHeight: 1.45, marginBottom: '16px' }}>
-                These bounds make one extra department-clubbing unit outweigh any possible block-count difference, and one extra task outweigh all lower-priority terms.
-              </div>
+            {/* DYNAMIC BREAKDOWN BASED ON SELECTED MODE */}
+            {fiveSimMode === 'greedy' ? (
+              <div className="anim-fade-in" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
+                {/* Left: What Greedy Did */}
+                <div style={{ background: '#FFFBEB', border: '1.5px solid #F59E0B', borderRadius: '12px', padding: '18px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '11px', background: '#F59E0B', color: '#FFFFFF', padding: '2px 8px', borderRadius: '4px', fontWeight: '800' }}>
+                      GREEDY DECISION LOGIC
+                    </span>
+                    <strong style={{ color: '#D97706', fontSize: '16px', fontFamily: 'var(--font-mono)' }}>Yield: 137 pts</strong>
+                  </div>
 
-              <div style={{ background: '#FFFFFF', padding: '12px 14px', borderRadius: '8px', border: '1px solid #FED7AA', fontFamily: 'var(--font-mono)', fontSize: '15px', fontWeight: '800', color: '#C2410C', lineHeight: 1.6 }}>
-                <div>β = M + 1</div>
-                <div>α = 2Mβ + M + 1</div>
-              </div>
-            </div>
-          </div>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#92400E', fontWeight: '800' }}>
+                    Trapped by Myopic Single-Block Maximization
+                  </h4>
 
-          {/* Card 3: SHOWCASE COEFFICIENTS (Mint / Green) */}
-          <div
-            style={{
-              background: '#F0FDF4',
-              border: '1px solid #BBF7D0',
-              borderRadius: '12px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#047857', fontWeight: '800', marginBottom: '8px' }}>
-                SHOWCASE COEFFICIENTS
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: '#065F46', marginBottom: '8px', fontFamily: 'var(--font-mono)' }}>
-                M = 7 → β = 8 → α = 120
-              </div>
-
-              <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: '8px', border: '1px solid #86EFAC', fontFamily: 'var(--font-mono)', fontSize: '14.5px', fontWeight: '900', color: '#059669', marginBottom: '12px' }}>
-                R(B) = 120 × T<sub>β</sub> + 8 × C<sub>β</sub> − 1
-              </div>
-
-              <div style={{ fontSize: '11px', color: '#065F46', lineHeight: 1.45 }}>
-                <strong>Hard constraints are not reward terms:</strong> section compatibility, train conflicts, interval overlap and unique task assignment must be enforced before a candidate can be selected.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Worked Reward Calculation Table (Directly from slide) */}
-        <div style={{ padding: '0 28px 20px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#475569', marginBottom: '10px' }}>
-            WORKED REWARD CALCULATION · CONTROLLED 7-CANDIDATE EXAMPLE
-          </div>
-
-          <div className="ops-table-container" style={{ border: '1px solid #E2E8F0', borderRadius: '10px', overflow: 'hidden' }}>
-            <table className="ops-table" style={{ margin: 0 }}>
-              <thead>
-                <tr style={{ background: '#1E293B', color: '#FFFFFF' }}>
-                  <th style={{ color: '#F8FAFC', width: '16%' }}>Candidate</th>
-                  <th style={{ color: '#F8FAFC', width: '14%' }}>Tasks T<sub>β</sub></th>
-                  <th style={{ color: '#F8FAFC', width: '22%' }}>Departments</th>
-                  <th style={{ color: '#F8FAFC', width: '12%' }}>C<sub>β</sub></th>
-                  <th style={{ color: '#F8FAFC', width: '14%' }}>Reward</th>
-                  <th style={{ color: '#F8FAFC', width: '22%' }}>Interpretation</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Candidate A */}
-                <tr style={{ background: '#FFFBEB' }}>
-                  <td style={{ fontWeight: '800', color: '#D97706' }}>A (Greedy Pick)</td>
-                  <td className="cell-mono" style={{ fontWeight: '700' }}>2</td>
-                  <td>Eng. + S&T</td>
-                  <td className="cell-mono" style={{ fontWeight: '700' }}>1</td>
-                  <td className="cell-mono" style={{ fontWeight: '900', color: '#D97706', fontSize: '14px' }}>247</td>
-                  <td style={{ fontSize: '12px', color: '#475569' }}>2 tasks + 1 dept bonus − 1</td>
-                </tr>
-
-                {/* Candidate B / C / E / F / G */}
-                <tr>
-                  <td style={{ fontWeight: '700', color: '#334155' }}>B / C / E / F / G</td>
-                  <td className="cell-mono" style={{ fontWeight: '700' }}>1</td>
-                  <td>1 department</td>
-                  <td className="cell-mono" style={{ fontWeight: '700' }}>0</td>
-                  <td className="cell-mono" style={{ fontWeight: '800', color: '#334155', fontSize: '14px' }}>119 each</td>
-                  <td style={{ fontSize: '12px', color: '#475569' }}>1 task − 1 block</td>
-                </tr>
-
-                {/* Candidate D */}
-                <tr style={{ background: '#F0FDF4' }}>
-                  <td style={{ fontWeight: '800', color: '#059669' }}>D (DP Single Block)</td>
-                  <td className="cell-mono" style={{ fontWeight: '700' }}>3</td>
-                  <td>Eng. + S&T + Traction</td>
-                  <td className="cell-mono" style={{ fontWeight: '700' }}>2</td>
-                  <td className="cell-mono" style={{ fontWeight: '900', color: '#059669', fontSize: '14px' }}>★ 375</td>
-                  <td style={{ fontSize: '12px', color: '#065F46', fontWeight: '600' }}>3 tasks + 2 dept bonus − 1</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            LIVE INTERACTIVE ALGORITHMIC DECISION & BACKTRACKING SIMULATOR
-            ========================================================================= */}
-        <div style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0', padding: '24px 28px' }}>
-          {/* Simulator Header & Toggle Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#059669', fontWeight: '800' }}>
-                LIVE DECISION & BACKTRACKING SIMULATION
-              </div>
-              <h3 style={{ margin: '2px 0 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>
-                Watch Greedy Lock vs How DP Backtracks to Global Optimum
-              </h3>
-            </div>
-
-            {/* Toggle Mode */}
-            <div style={{ display: 'flex', background: '#FFFFFF', padding: '4px', borderRadius: '10px', border: '1px solid #CBD5E1', gap: '6px' }}>
-              <button
-                onClick={() => setSimMode('greedy')}
-                style={{
-                  border: 'none',
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  background: simMode === 'greedy' ? '#F59E0B' : 'transparent',
-                  color: simMode === 'greedy' ? '#FFFFFF' : '#D97706',
-                  transition: 'all 0.15s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>🔴 Greedy Early Lock (R = 247)</span>
-              </button>
-              <button
-                onClick={() => setSimMode('dp')}
-                style={{
-                  border: 'none',
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  background: simMode === 'dp' ? '#10B981' : 'transparent',
-                  color: simMode === 'dp' ? '#FFFFFF' : '#059669',
-                  transition: 'all 0.15s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>🟢 DP Bellman Backtracking (R = 732)</span>
-              </button>
-            </div>
-          </div>
-
-          {/* SIMULATION MODE: GREEDY */}
-          {simMode === 'greedy' && (
-            <div className="anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '10px', padding: '14px 18px', color: '#92400E', fontSize: '12.5px', lineHeight: 1.5 }}>
-                <strong>Greedy Decision Mechanism:</strong> Greedy sorts candidates by earliest start time (07:45). It sees <strong>Candidate A</strong> with $R = 247$, which seems like a high individual score ($247 &gt; 119$). Greedy immediately commits Candidate A. But Candidate A locks the <strong>entire 270-minute window (07:45–12:15)</strong>, instantly colliding with and rejecting Candidates D, B, E, F, C, and G!
-              </div>
-
-              {/* Visual Corridor Conflict Collision Map */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '18px 20px' }}>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A', marginBottom: '12px' }}>
-                  Physical Corridor Collision Map (Section A–B, Track 1):
+                  <p style={{ fontSize: '12px', color: '#78350F', lineHeight: 1.5, margin: 0 }}>
+                    1. Greedy scans all 5 candidate blocks.<br />
+                    2. It finds <strong>Block 1 ($R = 137$)</strong> has the <strong>highest individual reward</strong> ($137 &gt; 65$).<br />
+                    3. Greedy commits Block 1 immediately.<br />
+                    4. Block 1 spans <strong>08:00 to 11:30 (3.5 hours)</strong>.<br />
+                    5. When Greedy examines Blocks 2, 3, 4, and 5, <strong>every single one collides</strong> with Block 1's track possession!<br />
+                    6. Result: <strong>Blocks 2, 3, 4, 5 are all rejected</strong> due to interval overlap collision.
+                  </p>
                 </div>
 
-                {/* Candidate A (Occupying whole track) */}
-                <div style={{ marginBottom: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: '800', color: '#D97706' }}>★ COMMITTED: BLK-A (07:45 – 12:15, 270 min)</span>
-                    <strong style={{ color: '#D97706', fontFamily: 'var(--font-mono)' }}>R(A) = 247 pts</strong>
+                {/* Right: Collision Table */}
+                <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ fontSize: '11.5px', fontWeight: '800', color: '#0F172A', marginBottom: '8px' }}>
+                    Greedy Collision Diagnosis:
                   </div>
-                  <div style={{ width: '100%', height: '24px', background: '#FEF3C7', border: '2px solid #F59E0B', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '800', color: '#92400E' }}>
-                    100% CORRIDOR OCCUPIED BY BLK-A (2 Tasks: TASK-01 + TASK-02)
-                  </div>
-                </div>
-
-                {/* Starved Candidates */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#EF4444', textTransform: 'uppercase' }}>
-                    Collided & Starved Candidates (Rejected by Overlap with BLK-A):
-                  </div>
-
-                  {[
-                    { id: 'BLK-D', time: '08:00 – 08:45', r: 375, t: '3 Tasks (Eng + S&T + Traction)' },
-                    { id: 'BLK-E', time: '09:00 – 09:45', r: 119, t: '1 Task (Traction)' },
-                    { id: 'BLK-F', time: '10:00 – 10:45', r: 119, t: '1 Task (Engineering)' },
-                    { id: 'BLK-G', time: '11:00 – 11:45', r: 119, t: '1 Task (S&T)' },
-                  ].map((c) => (
-                    <div
-                      key={c.id}
-                      style={{
-                        background: '#FEF2F2',
-                        border: '1px dashed #FECACA',
-                        borderRadius: '6px',
-                        padding: '8px 12px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        fontSize: '11.5px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#EF4444', fontWeight: '800' }}>❌ {c.id}</span>
-                        <span style={{ color: '#64748B' }}>({c.time}) · {c.t}</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#EF4444', textDecoration: 'line-through', fontFamily: 'var(--font-mono)' }}>R = {c.r} pts</span>
-                        <span style={{ background: '#FEE2E2', color: '#991B1B', fontSize: '10px', padding: '1px 6px', borderRadius: '4px', fontWeight: '700' }}>COLLISION OVERLAP</span>
-                      </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
+                    <div style={{ background: '#FEF3C7', padding: '6px 10px', borderRadius: '6px', color: '#92400E', fontWeight: '700' }}>
+                      ✔ Block 1 (08:00–11:30): COMMITTED (+137 pts)
                     </div>
-                  ))}
-                </div>
-
-                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                  <span style={{ color: '#64748B' }}>Total Greedy Outcome:</span>
-                  <strong style={{ color: '#D97706', fontFamily: 'var(--font-mono)' }}>1 Block · 2 Tasks Scheduled · Total Reward = 247</strong>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* SIMULATION MODE: DYNAMIC PROGRAMMING */}
-          {simMode === 'dp' && (
-            <div className="anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '10px', padding: '14px 18px', color: '#065F46', fontSize: '12.5px', lineHeight: 1.5 }}>
-                <strong>Dynamic Programming (WIS) Mechanism:</strong> DP sorts candidate blocks by <strong>finish time</strong>, evaluates the Bellman recurrence $DP[i] = \max(DP[i-1],\; R(i) + DP[p(i)])$, and then <strong>backtracks from candidate G backwards to F → E → D</strong>. When examining Candidate A ($R=247$), it computes $R(A) + DP[0] = 247 \le 732$ and smartly <strong>discards Candidate A</strong> in favor of the chained combination!
-              </div>
-
-              {/* Step 1: Bellman Recurrence Evaluation Table */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '16px 20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '800', color: '#0F172A' }}>
-                    1. Bellman Recurrence Table: DP[i] = max( DP[i-1], R(i) + DP[p(i)] )
+                    <div style={{ background: '#FEF2F2', padding: '6px 10px', borderRadius: '6px', color: '#991B1B' }}>
+                      ❌ Block 2 (08:00–08:50): Overlaps with Block 1
+                    </div>
+                    <div style={{ background: '#FEF2F2', padding: '6px 10px', borderRadius: '6px', color: '#991B1B' }}>
+                      ❌ Block 3 (09:00–09:50): Overlaps with Block 1
+                    </div>
+                    <div style={{ background: '#FEF2F2', padding: '6px 10px', borderRadius: '6px', color: '#991B1B' }}>
+                      ❌ Block 4 (10:00–10:50): Overlaps with Block 1
+                    </div>
+                    <div style={{ background: '#FEF2F2', padding: '6px 10px', borderRadius: '6px', color: '#991B1B' }}>
+                      ❌ Block 5 (11:00–11:50): Overlaps with Block 1 (ends 11:30)
+                    </div>
                   </div>
-                  <span style={{ fontSize: '11px', color: '#059669', fontWeight: '700' }}>Sorted by Finish Time</span>
                 </div>
+              </div>
+            ) : (
+              <div className="anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* DP Recurrence Table */}
+                <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '18px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#0F172A' }}>
+                      1. DP Bellman Recurrence Table: Sorted by Finish Time
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#059669', fontWeight: '700' }}>
+                      DP[i] = max( DP[i-1], R(i) + DP[p(i)] )
+                    </span>
+                  </div>
 
-                <div className="ops-table-container" style={{ margin: 0 }}>
-                  <table className="ops-table" style={{ fontSize: '11.5px' }}>
-                    <thead>
-                      <tr>
-                        <th style={{ width: '6%' }}>i</th>
-                        <th style={{ width: '16%' }}>Candidate (Finish)</th>
-                        <th style={{ width: '12%' }}>Reward R(i)</th>
-                        <th style={{ width: '14%' }}>p(i)</th>
-                        <th style={{ width: '16%' }}>Include Branch</th>
-                        <th style={{ width: '14%' }}>Exclude Branch</th>
-                        <th style={{ width: '10%' }}>DP[i]</th>
-                        <th style={{ width: '12%' }}>Decision</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {DP_STEPS.map((step) => (
-                        <tr key={step.i} style={{ background: step.action === 'INCLUDE' ? '#F0FDF4' : '#FFFFFF' }}>
-                          <td className="cell-mono" style={{ fontWeight: '700' }}>{step.i}</td>
-                          <td style={{ fontWeight: '700', color: step.action === 'INCLUDE' ? '#059669' : '#475569' }}>
-                            {step.candidate}
-                          </td>
-                          <td className="cell-mono">{step.ri}</td>
-                          <td className="cell-mono">{step.pred}</td>
-                          <td className="cell-mono" style={{ color: step.incl > step.excl ? '#059669' : '#64748B', fontWeight: step.incl > step.excl ? '800' : '500' }}>
-                            {step.ri} + {step.predVal} = {step.incl}
-                          </td>
-                          <td className="cell-mono">{step.excl}</td>
-                          <td className="cell-mono" style={{ fontWeight: '800', color: '#0F172A' }}>{step.dpVal}</td>
-                          <td>
-                            <span
-                              style={{
-                                background: step.action === 'INCLUDE' ? '#DCFCE7' : '#F1F5F9',
-                                color: step.action === 'INCLUDE' ? '#15803D' : '#64748B',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '700',
-                                fontSize: '10px',
-                              }}
-                            >
-                              {step.action}
-                            </span>
-                          </td>
+                  <div className="ops-table-container" style={{ margin: 0 }}>
+                    <table className="ops-table" style={{ fontSize: '11.5px' }}>
+                      <thead>
+                        <tr>
+                          <th>i</th>
+                          <th>Candidate (Finish Time)</th>
+                          <th>R(i)</th>
+                          <th>Compatible p(i)</th>
+                          <th>Include Branch</th>
+                          <th>Exclude Branch</th>
+                          <th>DP[i]</th>
+                          <th>Decision</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {FIVE_BLOCKS_DP_STEPS.map((step) => (
+                          <tr key={step.step} style={{ background: step.action === 'INCLUDE' ? '#F0FDF4' : '#FFFFFF' }}>
+                            <td className="cell-mono" style={{ fontWeight: '700' }}>{step.step}</td>
+                            <td style={{ fontWeight: '700', color: step.action === 'INCLUDE' ? '#059669' : '#475569' }}>
+                              {step.block} ({step.time})
+                            </td>
+                            <td className="cell-mono">{step.reward}</td>
+                            <td className="cell-mono">{step.pred}</td>
+                            <td className="cell-mono" style={{ color: step.incl > step.excl ? '#059669' : '#64748B', fontWeight: step.incl > step.excl ? '800' : '500' }}>
+                              {step.reward} + {step.predVal} = {step.incl}
+                            </td>
+                            <td className="cell-mono">{step.excl}</td>
+                            <td className="cell-mono" style={{ fontWeight: '800', color: '#0F172A' }}>{step.dpVal}</td>
+                            <td>
+                              <span
+                                style={{
+                                  background: step.action === 'INCLUDE' ? '#DCFCE7' : '#F1F5F9',
+                                  color: step.action === 'INCLUDE' ? '#15803D' : '#64748B',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  fontWeight: '700',
+                                  fontSize: '10px',
+                                }}
+                              >
+                                {step.action}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Backtracking Reconstruction Steps */}
+                <div style={{ background: '#F0FDF4', border: '1.5px solid #10B981', borderRadius: '12px', padding: '18px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '800', color: '#065F46' }}>
+                      2. DP Backtracking Reconstruction (From Finish i=5 Backwards to Start):
+                    </div>
+                    <span style={{ background: '#10B981', color: '#FFFFFF', padding: '2px 8px', borderRadius: '4px', fontSize: '11.5px', fontWeight: '800' }}>
+                      DP Cumulative Total: 260 pts (+89.8% over Greedy)
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px' }}>
+                    {/* Step A: Start at Block 5 */}
+                    <div style={{ background: '#FFFFFF', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '10px' }}>
+                      <div style={{ fontSize: '10px', color: '#047857', fontWeight: '800' }}>STEP 1: INSPECT i=5 (Block 5)</div>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: '#0F172A', marginTop: '2px' }}>65 + DP[3] = 260</div>
+                      <div style={{ fontSize: '11px', color: '#059669', fontWeight: '800', marginTop: '4px' }}>✔ SELECT Block 5 ➜ Jump to p(5) = Block 4</div>
+                    </div>
+
+                    {/* Step B: Jump to Block 4 */}
+                    <div style={{ background: '#FFFFFF', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '10px' }}>
+                      <div style={{ fontSize: '10px', color: '#047857', fontWeight: '800' }}>STEP 2: INSPECT i=3 (Block 4)</div>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: '#0F172A', marginTop: '2px' }}>65 + DP[2] = 195</div>
+                      <div style={{ fontSize: '11px', color: '#059669', fontWeight: '800', marginTop: '4px' }}>✔ SELECT Block 4 ➜ Jump to p(3) = Block 3</div>
+                    </div>
+
+                    {/* Step C: Jump to Block 3 */}
+                    <div style={{ background: '#FFFFFF', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '10px' }}>
+                      <div style={{ fontSize: '10px', color: '#047857', fontWeight: '800' }}>STEP 3: INSPECT i=2 (Block 3)</div>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: '#0F172A', marginTop: '2px' }}>65 + DP[1] = 130</div>
+                      <div style={{ fontSize: '11px', color: '#059669', fontWeight: '800', marginTop: '4px' }}>✔ SELECT Block 3 ➜ Jump to p(2) = Block 2</div>
+                    </div>
+
+                    {/* Step D: Jump to Block 2 */}
+                    <div style={{ background: '#DCFCE7', border: '2px solid #10B981', borderRadius: '8px', padding: '10px' }}>
+                      <div style={{ fontSize: '10px', color: '#065F46', fontWeight: '800' }}>STEP 4: INSPECT i=1 (Block 2)</div>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: '#065F46', marginTop: '2px' }}>65 + DP[0] = 65</div>
+                      <div style={{ fontSize: '11px', color: '#059669', fontWeight: '900', marginTop: '4px' }}>★ SELECT Block 2 ➜ Base 0 Reached!</div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #D1FAE5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ color: '#065F46' }}>
+                      <strong>Notice:</strong> Block 1 (R = 137) was <strong>safely discarded</strong> at i=4 because its inclusion yielded only 137 + 0 = 137 &lt; 195!
+                    </span>
+                    <strong style={{ color: '#059669', fontFamily: 'var(--font-mono)' }}>
+                      Reconstructed Set: [Block 2, Block 3, Block 4, Block 5] = 260 pts
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: SLIDE 5 FORMAL REFERENCE (M=7) */}
+        {rewardTab === 'slide_showcase' && (
+          <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* 3 Architecture Cards (Slide 5 Layout) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '18px' }}>
+              {/* Card 1: CANDIDATE-BLOCK REWARD */}
+              <div style={{ background: '#1E293B', color: '#FFFFFF', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94A3B8', fontWeight: '800', marginBottom: '8px' }}>
+                    CANDIDATE-BLOCK REWARD
+                  </div>
+                  <div style={{ fontSize: '22px', fontWeight: '800', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em', marginBottom: '10px' }}>
+                    R(B) = α × T<sub>β</sub> + β × C<sub>β</sub> − 1
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#CBD5E1', marginBottom: '14px', fontFamily: 'var(--font-mono)' }}>
+                    <div>T<sub>β</sub> = unique tasks in block B</div>
+                    <div>C<sub>β</sub> = max(0, distinct departments in B − 1)</div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11.5px', lineHeight: 1.4 }}>
+                    <div>❶ <strong>TASK COVERAGE:</strong> Each unique task adds α. Highest-priority objective.</div>
+                    <div>❷ <strong>DEPARTMENT CLUBBING:</strong> Each extra dept beyond first adds β.</div>
+                    <div>❸ <strong>BLOCK ECONOMY:</strong> Each block incurs −1 penalty, preferring fewer blocks on tie.</div>
+                  </div>
                 </div>
               </div>
 
-              {/* Step 2: Backtracking Reconstruction Trace */}
-              <div style={{ background: '#FFFFFF', border: '1.5px solid #10B981', borderRadius: '12px', padding: '18px 20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#065F46' }}>
-                    2. Backtracking Reconstruction Trace (From Finish to Start):
+              {/* Card 2: HOW α AND β ARE CHOSEN */}
+              <div style={{ background: '#FFF5EB', border: '1px solid #FED7AA', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#C2410C', fontWeight: '800', marginBottom: '8px' }}>
+                    HOW α AND β ARE CHOSEN
                   </div>
-                  <span style={{ background: '#10B981', color: '#FFFFFF', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
-                    Optimal Set: [D, E, F, G]
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
-                  {/* Step 1: Start at A */}
-                  <div style={{ background: '#FFF1F2', border: '1px solid #FECDD3', borderRadius: '8px', padding: '10px' }}>
-                    <div style={{ fontSize: '10px', color: '#BE123C', fontWeight: '800' }}>STEP 1: INSPECT i=7 (BLK-A)</div>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A', marginTop: '2px' }}>247 + DP[0] &lt; 732</div>
-                    <div style={{ fontSize: '11px', color: '#E11D48', fontWeight: '800', marginTop: '4px' }}>➜ REJECT A</div>
+                  <div style={{ fontSize: '12.5px', color: '#9A3412', fontWeight: '700', marginBottom: '6px' }}>
+                    Let M = number of feasible candidate blocks.
                   </div>
-
-                  {/* Step 2: Jump to G */}
-                  <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '10px' }}>
-                    <div style={{ fontSize: '10px', color: '#047857', fontWeight: '800' }}>STEP 2: INSPECT i=6 (BLK-G)</div>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A', marginTop: '2px' }}>119 + DP[F] = 732</div>
-                    <div style={{ fontSize: '11px', color: '#059669', fontWeight: '800', marginTop: '4px' }}>✔ SELECT G (Jump to F)</div>
+                  <div style={{ fontSize: '11px', color: '#7C2D12', lineHeight: 1.45, marginBottom: '14px' }}>
+                    Bounds ensure one extra clubbing unit outweighs any block-count difference, and one extra task outweighs all lower terms.
                   </div>
-
-                  {/* Step 3: Jump to F */}
-                  <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '10px' }}>
-                    <div style={{ fontSize: '10px', color: '#047857', fontWeight: '800' }}>STEP 3: INSPECT i=4 (BLK-F)</div>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A', marginTop: '2px' }}>119 + DP[E] = 613</div>
-                    <div style={{ fontSize: '11px', color: '#059669', fontWeight: '800', marginTop: '4px' }}>✔ SELECT F (Jump to E)</div>
-                  </div>
-
-                  {/* Step 4: Jump to E */}
-                  <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '10px' }}>
-                    <div style={{ fontSize: '10px', color: '#047857', fontWeight: '800' }}>STEP 4: INSPECT i=3 (BLK-E)</div>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A', marginTop: '2px' }}>119 + DP[D] = 494</div>
-                    <div style={{ fontSize: '11px', color: '#059669', fontWeight: '800', marginTop: '4px' }}>✔ SELECT E (Jump to D)</div>
-                  </div>
-
-                  {/* Step 5: Jump to D */}
-                  <div style={{ background: '#DCFCE7', border: '2px solid #10B981', borderRadius: '8px', padding: '10px' }}>
-                    <div style={{ fontSize: '10px', color: '#065F46', fontWeight: '900' }}>STEP 5: INSPECT i=1 (BLK-D)</div>
-                    <div style={{ fontSize: '12px', fontWeight: '800', color: '#065F46', marginTop: '2px' }}>375 + DP[0] = 375</div>
-                    <div style={{ fontSize: '11px', color: '#059669', fontWeight: '900', marginTop: '4px' }}>★ SELECT D (Base 0 reached)</div>
+                  <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: '8px', border: '1px solid #FED7AA', fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: '800', color: '#C2410C', lineHeight: 1.6 }}>
+                    <div>β = M + 1</div>
+                    <div>α = 2Mβ + M + 1</div>
                   </div>
                 </div>
+              </div>
 
-                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #D1FAE5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                  <span style={{ color: '#065F46' }}>
-                    Reconstructed Optimal Chain: <strong>BLK-D (375) + BLK-E (119) + BLK-F (119) + BLK-G (119)</strong>
-                  </span>
-                  <strong style={{ color: '#059669', fontFamily: 'var(--font-mono)', fontSize: '14px' }}>
-                    Total Accumulated DP Reward = 732 pts (+196.4% over Greedy)
-                  </strong>
+              {/* Card 3: SHOWCASE COEFFICIENTS */}
+              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#047857', fontWeight: '800', marginBottom: '8px' }}>
+                    SHOWCASE COEFFICIENTS
+                  </div>
+                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#065F46', marginBottom: '8px', fontFamily: 'var(--font-mono)' }}>
+                    M = 7 → β = 8 → α = 120
+                  </div>
+                  <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: '8px', border: '1px solid #86EFAC', fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: '900', color: '#059669', marginBottom: '10px' }}>
+                    R(B) = 120 × T<sub>β</sub> + 8 × C<sub>β</sub> − 1
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#065F46', lineHeight: 1.4 }}>
+                    Hard constraints are enforced prior to candidate evaluation.
+                  </div>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Footnote matching slide footer */}
-          <div style={{ marginTop: '14px', fontSize: '10.5px', color: '#94A3B8', fontStyle: 'italic' }}>
-            For multi-section railway data, standard WIS is not sufficient if candidate blocks can share task IDs or compete for resources. The DP state / candidate model explicitly prevents duplicate task assignment. (Manipal University Jaipur · PBL)
+            {/* Slide 5 Table */}
+            <div className="ops-table-container" style={{ border: '1px solid #E2E8F0', borderRadius: '10px', overflow: 'hidden' }}>
+              <table className="ops-table" style={{ margin: 0 }}>
+                <thead>
+                  <tr style={{ background: '#1E293B', color: '#FFFFFF' }}>
+                    <th style={{ color: '#F8FAFC' }}>Candidate</th>
+                    <th style={{ color: '#F8FAFC' }}>Tasks T<sub>β</sub></th>
+                    <th style={{ color: '#F8FAFC' }}>Departments</th>
+                    <th style={{ color: '#F8FAFC' }}>C<sub>β</sub></th>
+                    <th style={{ color: '#F8FAFC' }}>Reward</th>
+                    <th style={{ color: '#F8FAFC' }}>Interpretation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ background: '#FFFBEB' }}>
+                    <td style={{ fontWeight: '800', color: '#D97706' }}>A (Greedy Pick)</td>
+                    <td className="cell-mono">2</td>
+                    <td>Eng. + S&T</td>
+                    <td className="cell-mono">1</td>
+                    <td className="cell-mono" style={{ fontWeight: '900', color: '#D97706' }}>247</td>
+                    <td>2 tasks + 1 dept bonus − 1</td>
+                  </tr>
+                  <tr>
+                    <td style={{ fontWeight: '700' }}>B / C / E / F / G</td>
+                    <td className="cell-mono">1</td>
+                    <td>1 department</td>
+                    <td className="cell-mono">0</td>
+                    <td className="cell-mono" style={{ fontWeight: '800' }}>119 each</td>
+                    <td>1 task − 1 block</td>
+                  </tr>
+                  <tr style={{ background: '#F0FDF4' }}>
+                    <td style={{ fontWeight: '800', color: '#059669' }}>D (DP Single Block)</td>
+                    <td className="cell-mono">3</td>
+                    <td>Eng. + S&T + Traction</td>
+                    <td className="cell-mono">2</td>
+                    <td className="cell-mono" style={{ fontWeight: '900', color: '#059669' }}>★ 375</td>
+                    <td style={{ color: '#065F46', fontWeight: '600' }}>3 tasks + 2 dept bonus − 1</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Slide 5 Outcome Footer */}
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <span>
+                Slide 5 Reconstructed Chain: <strong>D (375) + E (119) + F (119) + G (119) = 732 pts</strong>
+              </span>
+              <strong style={{ color: '#059669' }}>
+                DP (732) beats Greedy (247) by +485 pts (+196.4%)
+              </strong>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
