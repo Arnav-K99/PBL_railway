@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // ============================================================================
 // THE 5 OPERATIONAL TRAINS ON TRACK 1 CORRIDOR (PANIPAT – KARNAL)
@@ -262,6 +262,269 @@ export default function ComparisonPage({
 }) {
   // Live example simulation mode: 'fcfs' | 'greedy' | 'dp'
   const [algoMode, setAlgoMode] = useState('dp');
+
+  // Simulation playback state for the Corridor Timeline
+  const [simPlaying, setSimPlaying] = useState(false);
+  const [simTimeMin, setSimTimeMin] = useState(0); // 0 to 240 mins (08:00 to 12:00)
+  const [simSpeed, setSimSpeed] = useState(2); // 1x, 2x, 4x
+
+  // Reset simulation time to 0 whenever algorithm mode changes so user can watch it fresh
+  useEffect(() => {
+    setSimTimeMin(0);
+    setSimPlaying(false);
+  }, [algoMode]);
+
+  // Smooth animation loop for simulation
+  useEffect(() => {
+    let animId;
+    let lastTimestamp = null;
+
+    const step = (timestamp) => {
+      if (lastTimestamp === null) {
+        lastTimestamp = timestamp;
+      }
+      const rawDt = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+      const dt = Math.min(rawDt, 0.1);
+
+      if (simPlaying) {
+        setSimTimeMin((prev) => {
+          // At 1x speed, 240 mins takes 24 seconds -> 10 mins / sec
+          const rate = 10 * simSpeed;
+          const nextVal = prev + rate * dt;
+          if (nextVal >= 240) {
+            setSimPlaying(false);
+            return 240;
+          }
+          return nextVal;
+        });
+      }
+      animId = requestAnimationFrame(step);
+    };
+
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [simPlaying, simSpeed]);
+
+  // Helper: Convert simulation minutes from 08:00 (0..240) to time string
+  const formatSimTime = (m) => {
+    const total = 8 * 60 + Math.round(m);
+    const h = Math.floor(total / 60);
+    const min = total % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayH = h > 12 ? h - 12 : h;
+    return `${String(displayH).padStart(2, '0')}:${String(min).padStart(2, '0')} ${ampm}`;
+  };
+
+  // Helper: Get live simulation status based on algorithm mode and current simulated minute
+  const getSimStatus = () => {
+    const t = simTimeMin;
+    if (algoMode === 'dp') {
+      let banked = 0;
+      if (t >= 50) banked += 65;
+      if (t >= 110) banked += 65;
+      if (t >= 170) banked += 65;
+      if (t >= 230) banked += 65;
+
+      if (t >= 0 && t < 50) {
+        return {
+          phase: 'MAINTENANCE',
+          tag: '🔧 Block 2 (USFD Testing)',
+          msg: 'Engineering crew performing USFD track testing in 50m Gap 1.',
+          signal: '🟢 Inter-train slot secured',
+          signalColor: '#059669',
+          banked,
+          delays: 0,
+        };
+      } else if (t >= 50 && t < 60) {
+        return {
+          phase: 'TRAIN',
+          tag: '🚆 TR-12424 Rajdhani Express (130 km/h)',
+          msg: 'Block 2 cleared at 08:50! Rajdhani cruises through on green signal with ZERO delay.',
+          signal: '🟢 Clear Passage (130 km/h)',
+          signalColor: '#059669',
+          banked,
+          delays: 0,
+        };
+      } else if (t >= 60 && t < 110) {
+        return {
+          phase: 'MAINTENANCE',
+          tag: '🔧 Block 3 (Point Machine Test)',
+          msg: 'Signal & Telecom team calibrating point motors in 50m Gap 2.',
+          signal: '🟢 Inter-train slot secured',
+          signalColor: '#059669',
+          banked,
+          delays: 0,
+        };
+      } else if (t >= 110 && t < 120) {
+        return {
+          phase: 'TRAIN',
+          tag: '🚆 TR-22436 Vande Bharat Express (130 km/h)',
+          msg: 'Block 3 cleared at 09:50! Vande Bharat cruises through on green signal with ZERO delay.',
+          signal: '🟢 Clear Passage (130 km/h)',
+          signalColor: '#059669',
+          banked,
+          delays: 0,
+        };
+      } else if (t >= 120 && t < 170) {
+        return {
+          phase: 'MAINTENANCE',
+          tag: '🔧 Block 4 (25 kV OHE Check)',
+          msg: 'Traction electrical team inspecting OHE catenary insulators in 50m Gap 3.',
+          signal: '🟢 Inter-train slot secured',
+          signalColor: '#059669',
+          banked,
+          delays: 0,
+        };
+      } else if (t >= 170 && t < 180) {
+        return {
+          phase: 'TRAIN',
+          tag: '🚆 TR-12004 Gomti Express (110 km/h)',
+          msg: 'Block 4 cleared at 10:50! Gomti Express transits on schedule with ZERO delay.',
+          signal: '🟢 Clear Passage (110 km/h)',
+          signalColor: '#059669',
+          banked,
+          delays: 0,
+        };
+      } else if (t >= 180 && t < 230) {
+        return {
+          phase: 'MAINTENANCE',
+          tag: '🔧 Block 5 (Ballast Tamp)',
+          msg: 'Engineering track team performing ballast tamping in 50m Gap 4.',
+          signal: '🟢 Inter-train slot secured',
+          signalColor: '#059669',
+          banked,
+          delays: 0,
+        };
+      } else {
+        return {
+          phase: 'COMPLETE',
+          tag: '🌟 OPTIMAL SCHEDULE COMPLETE',
+          msg: 'All 4 blocks executed (260 pts banked)! 0 passenger trains delayed. +89.8% over Greedy!',
+          signal: '🟢 Maximum Yield Achieved',
+          signalColor: '#059669',
+          banked: 260,
+          delays: 0,
+        };
+      }
+    } else if (algoMode === 'greedy') {
+      const banked = t >= 210 ? 137 : 0;
+      let delays = 0;
+      if (t >= 50) delays++;
+      if (t >= 110) delays++;
+      if (t >= 170) delays++;
+
+      if (t < 210) {
+        if (t >= 50 && t < 60) {
+          return {
+            phase: 'CONFLICT',
+            tag: '🚨 TRAIN DELAY: TR-12424 Rajdhani Express',
+            msg: 'Rajdhani arrived at 08:50 but Track 1 is occupied by Mega-Block 1! Held at Home Signal.',
+            signal: '🔴 RED SIGNAL (Train Delayed)',
+            signalColor: '#DC2626',
+            banked,
+            delays,
+          };
+        } else if (t >= 60 && t < 110) {
+          return {
+            phase: 'COLLISION',
+            tag: '⚠️ COLLISION: Block 3 Blocked',
+            msg: 'S&T requested Block 3 at 09:00, but locked out because Mega-Block 1 is still ongoing.',
+            signal: '❌ Candidate Collided',
+            signalColor: '#DC2626',
+            banked,
+            delays,
+          };
+        } else if (t >= 110 && t < 120) {
+          return {
+            phase: 'CONFLICT',
+            tag: '🚨 TRAIN DELAY: TR-22436 Vande Bharat',
+            msg: 'Vande Bharat arrived at 09:50! Mega-Block 1 still on track! Delayed +30 mins.',
+            signal: '🔴 RED SIGNAL (Train Delayed)',
+            signalColor: '#DC2626',
+            banked,
+            delays,
+          };
+        } else if (t >= 120 && t < 170) {
+          return {
+            phase: 'COLLISION',
+            tag: '⚠️ COLLISION: Block 4 Blocked',
+            msg: 'Traction requested Block 4 at 10:00, but locked out by Mega-Block 1.',
+            signal: '❌ Candidate Collided',
+            signalColor: '#DC2626',
+            banked,
+            delays,
+          };
+        } else if (t >= 170 && t < 180) {
+          return {
+            phase: 'CONFLICT',
+            tag: '🚨 TRAIN DELAY: TR-12004 Gomti Express',
+            msg: 'Gomti Express arrived at 10:50! Track 1 blocked by Mega-Block 1! Speed regulated.',
+            signal: '🔴 RED SIGNAL (Train Delayed)',
+            signalColor: '#DC2626',
+            banked,
+            delays,
+          };
+        } else if (t >= 180 && t < 210) {
+          return {
+            phase: 'COLLISION',
+            tag: '⚠️ COLLISION: Block 5 Blocked',
+            msg: 'Eng requested Block 5 at 11:00, but locked out by Mega-Block 1.',
+            signal: '❌ Candidate Collided',
+            signalColor: '#DC2626',
+            banked,
+            delays,
+          };
+        } else {
+          return {
+            phase: 'MAINTENANCE',
+            tag: '🔧 Mega-Block 1 Possession (08:00–11:30)',
+            msg: 'Heavy track & S&T overhaul ongoing. Exclusively locking Track 1 mainline for 3.5 hrs.',
+            signal: '🟡 Track Possession Active',
+            signalColor: '#D97706',
+            banked,
+            delays,
+          };
+        }
+      } else {
+        return {
+          phase: 'COMPLETE',
+          tag: '⚠️ GREEDY SCHEDULE TRAPPED',
+          msg: 'Mega-Block 1 finished (+137 pts). Track cleared, but 3 trains delayed and Blocks 2–5 lost!',
+          signal: '⚠️ Trapped at 137 pts',
+          signalColor: '#D97706',
+          banked: 137,
+          delays: 3,
+        };
+      }
+    } else {
+      // FCFS
+      const banked = t >= 50 ? 65 : 0;
+      if (t < 50) {
+        return {
+          phase: 'MAINTENANCE',
+          tag: '🔧 Ticket #1 Active (08:00–08:50)',
+          msg: 'Ticket #1 (arrived 06:00 AM) active on Track 1 without looking ahead.',
+          signal: '🟡 In Progress',
+          signalColor: '#475569',
+          banked,
+          delays: 0,
+        };
+      } else {
+        return {
+          phase: 'COMPLETE',
+          tag: '⚠️ FCFS QUEUE HALTED',
+          msg: 'Ticket #1 completed (65 pts). Subsequent tickets rejected due to arrival queue conflict.',
+          signal: 'ℹ️ Trapped at 65 pts',
+          signalColor: '#475569',
+          banked: 65,
+          delays: 0,
+        };
+      }
+    }
+  };
+
+  const simStatus = getSimStatus();
 
   // Metrics from default operational dataset
   const fcfs = comparisonData?.fcfs?.metrics || {
@@ -1114,21 +1377,28 @@ export default function ComparisonPage({
           </div>
 
           {/* ===================================================================
-              COMPACT CORRIDOR TRACK 1 TIMELINE & TRAIN SCHEDULE
-              (Streamlined, clean labels, no text overlap)
+              INTERACTIVE SIMULATED CORRIDOR TIMELINE & TRAIN DISPATCH
+              (Live Simulation: Play, Pause, Scrub, Real-Time Train Passing & Conflict)
               =================================================================== */}
           <div
             style={{
               background: '#F8FAFC',
-              border: '1px solid #CBD5E1',
-              borderRadius: '10px',
-              padding: '14px 18px',
+              border: '1.5px solid #CBD5E1',
+              borderRadius: '12px',
+              padding: '16px 20px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
             }}
           >
             {/* Header: Title and Comparison Hierarchy */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#0F172A' }}>
-                Corridor Track 1 Possession Timeline (08:00 – 12:00)
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🎬</span>
+                  <span>Live Corridor Simulation: Track 1 Train &amp; Maintenance Schedule (08:00 – 12:00)</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                  Click Play or drag the time scrubber to simulate morning train transits and track possession conflicts.
+                </div>
               </div>
 
               {/* Hierarchy Pill */}
@@ -1147,196 +1417,535 @@ export default function ComparisonPage({
               </div>
             </div>
 
-            {/* Time Axis Bar with Clean Non-Overlapping Labels */}
+            {/* =================================================================
+                SIMULATION CONTROLLER CONSOLE (PLAY, SCRUB, SPEED, CLOCK)
+                ================================================================= */}
             <div
               style={{
-                position: 'relative',
-                height: '18px',
-                borderBottom: '1.5px solid #CBD5E1',
-                marginBottom: '8px',
-                fontSize: '10px',
-                color: '#64748B',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: '700',
+                background: '#FFFFFF',
+                borderRadius: '8px',
+                border: '1px solid #E2E8F0',
+                padding: '10px 14px',
+                marginBottom: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
               }}
             >
-              <span style={{ position: 'absolute', left: '0%' }}>08:00</span>
-              <span style={{ position: 'absolute', left: '20.8%', transform: 'translateX(-50%)' }}>08:50</span>
-              <span style={{ position: 'absolute', left: '45.8%', transform: 'translateX(-50%)' }}>09:50</span>
-              <span style={{ position: 'absolute', left: '70.8%', transform: 'translateX(-50%)' }}>10:50</span>
-              <span style={{ position: 'absolute', left: '95.8%', transform: 'translateX(-50%)' }}>11:50</span>
-            </div>
-
-            {/* Lane 1: Train Traffic Schedule */}
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '800', color: '#475569', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                🚆 Operational Train Traffic (Panipat – Karnal)
-              </div>
-              <div style={{ position: 'relative', height: '28px', background: '#FFFFFF', borderRadius: '6px', border: '1px solid #CBD5E1', overflow: 'hidden' }}>
-                {/* Train 1: Cleared before 08:00 */}
-                <div style={{ position: 'absolute', left: '0%', width: '4%', height: '100%', background: '#2563EB', color: '#FFFFFF', fontSize: '9px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="TR-12002 Shatabdi (clears 07:58)">
-                  🚆
-                </div>
-                {/* Gap 1 */}
-                <div style={{ position: 'absolute', left: '4%', width: '16.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  Gap 1 (50m)
-                </div>
-                {/* Train 2: 08:50 – 09:00 */}
-                <div style={{ position: 'absolute', left: '20.8%', width: '4.2%', height: '100%', background: '#7C3AED', color: '#FFFFFF', fontSize: '8.5px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="TR-12424 Rajdhani (08:50-09:00)">
-                  12424
-                </div>
-                {/* Gap 2 */}
-                <div style={{ position: 'absolute', left: '25%', width: '20.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  Gap 2 (50m)
-                </div>
-                {/* Train 3: 09:50 – 10:00 */}
-                <div style={{ position: 'absolute', left: '45.8%', width: '4.2%', height: '100%', background: '#DB2777', color: '#FFFFFF', fontSize: '8.5px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="TR-22436 Vande Bharat (09:50-10:00)">
-                  22436
-                </div>
-                {/* Gap 3 */}
-                <div style={{ position: 'absolute', left: '50%', width: '20.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  Gap 3 (50m)
-                </div>
-                {/* Train 4: 10:50 – 11:00 */}
-                <div style={{ position: 'absolute', left: '70.8%', width: '4.2%', height: '100%', background: '#EA580C', color: '#FFFFFF', fontSize: '8.5px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="TR-12004 Gomti Exp (10:50-11:00)">
-                  12004
-                </div>
-                {/* Gap 4 */}
-                <div style={{ position: 'absolute', left: '75%', width: '20.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  Gap 4 (50m)
-                </div>
-                {/* Train 5: 11:50 */}
-                <div style={{ position: 'absolute', left: '95.8%', width: '4.2%', height: '100%', background: '#0D9488', color: '#FFFFFF', fontSize: '8.5px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Freight BTPN (11:50)">
-                  BTPN
-                </div>
-              </div>
-            </div>
-
-            {/* Lane 2: Candidate Block 1 (Mega-Block · 08:00 – 11:30) */}
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '800', color: '#475569', marginBottom: '3px' }}>
-                <span>🔧 Candidate Block 1 (Mega-Block · 3.5h)</span>
-                <span style={{ color: '#D97706', fontFamily: 'var(--font-mono)' }}>R = 137 pts ★</span>
-              </div>
-              <div style={{ position: 'relative', height: '28px', background: '#FFFFFF', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
-                <div
+              {/* Playback Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={() => setSimPlaying(!simPlaying)}
                   style={{
-                    position: 'absolute',
-                    left: '0%',
-                    width: '87.5%',
-                    height: '100%',
-                    background: algoMode === 'greedy' ? '#FEF3C7' : algoMode === 'dp' ? '#F1F5F9' : '#FEE2E2',
-                    border: algoMode === 'greedy' ? '2px solid #F59E0B' : '1px dashed #CBD5E1',
-                    borderRadius: '5px',
+                    border: 'none',
+                    background: simPlaying ? '#DC2626' : '#2563EB',
+                    color: '#FFFFFF',
+                    padding: '6px 14px',
+                    borderRadius: '6px',
+                    fontSize: '11.5px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0 10px',
-                    fontSize: '10.5px',
-                    fontWeight: '800',
-                    color: algoMode === 'greedy' ? '#92400E' : '#64748B',
+                    gap: '6px',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <span>
-                    {algoMode === 'greedy' && '★ COMMITTED BY GREEDY: Block 1 (08:00 – 11:30 · 3.5h) · Exclusively Locks Track 1'}
-                    {algoMode === 'dp' && '⛔ EXCLUDED BY DP: Block 1 (137 ≤ 195 DP sum · DP harvests 4 inter-train blocks instead)'}
-                    {algoMode === 'fcfs' && '❌ REJECTED BY FCFS: Collided with Ticket #1 at 08:00'}
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-mono)' }}>R = 137 pts</span>
+                  <span>{simPlaying ? '⏸ Pause' : '▶ Play Simulation'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSimPlaying(false);
+                    setSimTimeMin(0);
+                  }}
+                  style={{
+                    border: '1px solid #CBD5E1',
+                    background: '#F8FAFC',
+                    color: '#475569',
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    fontSize: '11.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                  title="Reset to 08:00 AM"
+                >
+                  ↺ Reset
+                </button>
+
+                {/* Speed Toggles */}
+                <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: '6px', padding: '2px', gap: '2px' }}>
+                  {[1, 2, 4].map((spd) => (
+                    <button
+                      key={spd}
+                      onClick={() => setSimSpeed(spd)}
+                      style={{
+                        border: 'none',
+                        background: simSpeed === spd ? '#FFFFFF' : 'transparent',
+                        color: simSpeed === spd ? '#0F172A' : '#64748B',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        fontSize: '10.5px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        boxShadow: simSpeed === spd ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                      }}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interactive Timeline Scrubber Slider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1', minWidth: '220px', maxWidth: '420px' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748B', fontFamily: 'var(--font-mono)' }}>08:00</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="240"
+                  value={simTimeMin}
+                  onChange={(e) => setSimTimeMin(Number(e.target.value))}
+                  style={{
+                    flex: '1',
+                    cursor: 'pointer',
+                    accentColor: algoMode === 'dp' ? '#10B981' : algoMode === 'greedy' ? '#F59E0B' : '#475569',
+                  }}
+                />
+                <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748B', fontFamily: 'var(--font-mono)' }}>12:00</span>
+              </div>
+
+              {/* Live Status Readout Badges */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* Clock */}
+                <div
+                  style={{
+                    background: '#0F172A',
+                    color: '#38BDF8',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: simPlaying ? '#22C55E' : '#EAB308', display: 'inline-block' }} />
+                  <span>{formatSimTime(simTimeMin)}</span>
+                </div>
+
+                {/* Banked Score */}
+                <div
+                  style={{
+                    background: algoMode === 'dp' ? '#DCFCE7' : algoMode === 'greedy' ? '#FEF3C7' : '#F1F5F9',
+                    color: algoMode === 'dp' ? '#065F46' : algoMode === 'greedy' ? '#92400E' : '#334155',
+                    border: `1px solid ${algoMode === 'dp' ? '#10B981' : algoMode === 'greedy' ? '#F59E0B' : '#CBD5E1'}`,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '11.5px',
+                    fontWeight: '800',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                  }}
+                >
+                  Reward: {simStatus.banked} pts
                 </div>
               </div>
             </div>
 
-            {/* Lane 3: The 4 Inter-Train Blocks */}
-            <div style={{ marginBottom: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '800', color: '#475569', marginBottom: '3px' }}>
-                <span>🛠️ Inter-Train Blocks (Blocks 2, 3, 4, 5 · 50m each)</span>
-                <span style={{ color: '#059669', fontFamily: 'var(--font-mono)' }}>Cumulative Yield = 260 pts</span>
-              </div>
-              <div style={{ position: 'relative', height: '28px', background: '#FFFFFF', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
-                {/* Block 2 */}
+            {/* =================================================================
+                TIMELINE LANES WITH MOVING SCANLINE NEEDLE
+                ================================================================= */}
+            <div style={{ position: 'relative' }}>
+              {/* Moving Simulation Scanline Cursor (Needle) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: `${(simTimeMin / 240) * 100}%`,
+                  width: '2.5px',
+                  background: '#EF4444',
+                  boxShadow: '0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.4)',
+                  zIndex: 20,
+                  pointerEvents: 'none',
+                  transition: simPlaying ? 'none' : 'left 0.1s ease',
+                }}
+              >
+                {/* Floating time beacon above the needle */}
                 <div
                   style={{
                     position: 'absolute',
-                    left: '0%',
-                    width: '20.8%',
-                    height: '100%',
-                    background: algoMode === 'dp' ? '#DCFCE7' : algoMode === 'fcfs' ? '#F1F5F9' : '#FEE2E2',
-                    border: algoMode === 'dp' ? '1.5px solid #10B981' : algoMode === 'fcfs' ? '1.5px solid #64748B' : '1px dashed #EF4444',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9.5px',
-                    fontWeight: '800',
-                    color: algoMode === 'dp' ? '#065F46' : algoMode === 'fcfs' ? '#1E293B' : '#991B1B',
-                  }}
-                >
-                  {algoMode === 'dp' ? '✔ Block 2 (65)' : algoMode === 'fcfs' ? '✔ Ticket #1 (65)' : '❌ Overlapped'}
-                </div>
-
-                {/* Block 3 */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '25%',
-                    width: '20.8%',
-                    height: '100%',
-                    background: algoMode === 'dp' ? '#DCFCE7' : '#FEE2E2',
-                    border: algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9.5px',
-                    fontWeight: '800',
-                    color: algoMode === 'dp' ? '#065F46' : '#991B1B',
-                  }}
-                >
-                  {algoMode === 'dp' ? '✔ Block 3 (65)' : '❌ Overlapped'}
-                </div>
-
-                {/* Block 4 */}
-                <div
-                  style={{
-                    position: 'absolute',
+                    top: '-22px',
                     left: '50%',
-                    width: '20.8%',
-                    height: '100%',
-                    background: algoMode === 'dp' ? '#DCFCE7' : '#FEE2E2',
-                    border: algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    transform: 'translateX(-50%)',
+                    background: '#EF4444',
+                    color: '#FFFFFF',
                     fontSize: '9.5px',
                     fontWeight: '800',
-                    color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                    fontFamily: 'var(--font-mono)',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                   }}
                 >
-                  {algoMode === 'dp' ? '✔ Block 4 (65)' : '❌ Overlapped'}
+                  {formatSimTime(simTimeMin)}
                 </div>
+              </div>
 
-                {/* Block 5 */}
-                <div
+              {/* Time Axis Bar with Clean Non-Overlapping Labels */}
+              <div
+                style={{
+                  position: 'relative',
+                  height: '18px',
+                  borderBottom: '1.5px solid #CBD5E1',
+                  marginBottom: '8px',
+                  fontSize: '10px',
+                  color: '#64748B',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: '700',
+                }}
+              >
+                <span style={{ position: 'absolute', left: '0%' }}>08:00</span>
+                <span style={{ position: 'absolute', left: '20.8%', transform: 'translateX(-50%)' }}>08:50</span>
+                <span style={{ position: 'absolute', left: '45.8%', transform: 'translateX(-50%)' }}>09:50</span>
+                <span style={{ position: 'absolute', left: '70.8%', transform: 'translateX(-50%)' }}>10:50</span>
+                <span style={{ position: 'absolute', left: '95.8%', transform: 'translateX(-50%)' }}>11:50</span>
+              </div>
+
+              {/* Lane 1: Train Traffic Schedule */}
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ fontSize: '10px', fontWeight: '800', color: '#475569', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  🚆 Operational Train Traffic (Panipat – Karnal)
+                </div>
+                <div style={{ position: 'relative', height: '30px', background: '#FFFFFF', borderRadius: '6px', border: '1px solid #CBD5E1', overflow: 'hidden' }}>
+                  {/* Train 1: Cleared before 08:00 */}
+                  <div style={{ position: 'absolute', left: '0%', width: '4%', height: '100%', background: '#2563EB', color: '#FFFFFF', fontSize: '9px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="TR-12002 Shatabdi (clears 07:58)">
+                    🚆
+                  </div>
+                  {/* Gap 1 */}
+                  <div style={{ position: 'absolute', left: '4%', width: '16.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    Gap 1 (50m)
+                  </div>
+
+                  {/* Train 2: 08:50 – 09:00 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '20.8%',
+                      width: '4.2%',
+                      height: '100%',
+                      background: simTimeMin >= 50 && simTimeMin < 60 && algoMode === 'greedy' ? '#DC2626' : '#7C3AED',
+                      color: '#FFFFFF',
+                      fontSize: '8.5px',
+                      fontWeight: '800',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: simTimeMin >= 50 && simTimeMin < 60 ? '0 0 10px rgba(220, 38, 38, 0.8)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                    title="TR-12424 Rajdhani (08:50-09:00)"
+                  >
+                    <span>12424</span>
+                    {simTimeMin >= 50 && simTimeMin < 60 && (
+                      <span style={{ fontSize: '7px', fontWeight: '900' }}>
+                        {algoMode === 'greedy' ? 'HALT!' : 'PASS'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Gap 2 */}
+                  <div style={{ position: 'absolute', left: '25%', width: '20.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    Gap 2 (50m)
+                  </div>
+
+                  {/* Train 3: 09:50 – 10:00 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '45.8%',
+                      width: '4.2%',
+                      height: '100%',
+                      background: simTimeMin >= 110 && simTimeMin < 120 && algoMode === 'greedy' ? '#DC2626' : '#DB2777',
+                      color: '#FFFFFF',
+                      fontSize: '8.5px',
+                      fontWeight: '800',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: simTimeMin >= 110 && simTimeMin < 120 ? '0 0 10px rgba(220, 38, 38, 0.8)' : 'none',
+                    }}
+                    title="TR-22436 Vande Bharat (09:50-10:00)"
+                  >
+                    <span>22436</span>
+                    {simTimeMin >= 110 && simTimeMin < 120 && (
+                      <span style={{ fontSize: '7px', fontWeight: '900' }}>
+                        {algoMode === 'greedy' ? 'HALT!' : 'PASS'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Gap 3 */}
+                  <div style={{ position: 'absolute', left: '50%', width: '20.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    Gap 3 (50m)
+                  </div>
+
+                  {/* Train 4: 10:50 – 11:00 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '70.8%',
+                      width: '4.2%',
+                      height: '100%',
+                      background: simTimeMin >= 170 && simTimeMin < 180 && algoMode === 'greedy' ? '#DC2626' : '#EA580C',
+                      color: '#FFFFFF',
+                      fontSize: '8.5px',
+                      fontWeight: '800',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: simTimeMin >= 170 && simTimeMin < 180 ? '0 0 10px rgba(220, 38, 38, 0.8)' : 'none',
+                    }}
+                    title="TR-12004 Gomti Exp (10:50-11:00)"
+                  >
+                    <span>12004</span>
+                    {simTimeMin >= 170 && simTimeMin < 180 && (
+                      <span style={{ fontSize: '7px', fontWeight: '900' }}>
+                        {algoMode === 'greedy' ? 'DELAY' : 'PASS'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Gap 4 */}
+                  <div style={{ position: 'absolute', left: '75%', width: '20.8%', height: '100%', background: '#F0FDF4', color: '#059669', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    Gap 4 (50m)
+                  </div>
+
+                  {/* Train 5: 11:50 */}
+                  <div style={{ position: 'absolute', left: '95.8%', width: '4.2%', height: '100%', background: '#0D9488', color: '#FFFFFF', fontSize: '8.5px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Freight BTPN (11:50)">
+                    BTPN
+                  </div>
+                </div>
+              </div>
+
+              {/* Lane 2: Candidate Block 1 (Mega-Block · 08:00 – 11:30) */}
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '800', color: '#475569', marginBottom: '3px' }}>
+                  <span>🔧 Candidate Block 1 (Mega-Block · 3.5h)</span>
+                  <span style={{ color: '#D97706', fontFamily: 'var(--font-mono)' }}>R = 137 pts ★</span>
+                </div>
+                <div style={{ position: 'relative', height: '30px', background: '#FFFFFF', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '0%',
+                      width: '87.5%',
+                      height: '100%',
+                      background: algoMode === 'greedy'
+                        ? (simTimeMin < 210 ? '#FEF3C7' : '#F1F5F9')
+                        : algoMode === 'dp' ? '#F1F5F9' : '#FEE2E2',
+                      border: algoMode === 'greedy'
+                        ? (simTimeMin < 210 ? '2px solid #F59E0B' : '1px solid #CBD5E1')
+                        : '1px dashed #CBD5E1',
+                      borderRadius: '5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0 10px',
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      color: algoMode === 'greedy' ? '#92400E' : '#64748B',
+                      boxShadow: algoMode === 'greedy' && simTimeMin < 210 ? '0 0 8px rgba(245, 158, 11, 0.4)' : 'none',
+                    }}
+                  >
+                    <span>
+                      {algoMode === 'greedy' && (
+                        simTimeMin < 210
+                          ? '★ ACTIVE: Block 1 (08:00 – 11:30) · Exclusively Locking Track 1'
+                          : '✔ Block 1 Finished (+137 pts banked)'
+                      )}
+                      {algoMode === 'dp' && '⛔ EXCLUDED BY DP: Block 1 (137 ≤ 195 DP sum · Harvesting 4 gap blocks)'}
+                      {algoMode === 'fcfs' && '❌ REJECTED BY FCFS: Collided with Ticket #1 at 08:00'}
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>R = 137 pts</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lane 3: The 4 Inter-Train Blocks */}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '800', color: '#475569', marginBottom: '3px' }}>
+                  <span>🛠️ Inter-Train Blocks (Blocks 2, 3, 4, 5 · 50m each)</span>
+                  <span style={{ color: '#059669', fontFamily: 'var(--font-mono)' }}>Cumulative Potential = 260 pts</span>
+                </div>
+                <div style={{ position: 'relative', height: '30px', background: '#FFFFFF', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
+                  {/* Block 2 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '0%',
+                      width: '20.8%',
+                      height: '100%',
+                      background: algoMode === 'dp'
+                        ? (simTimeMin >= 50 ? '#DCFCE7' : '#ECFDF5')
+                        : algoMode === 'fcfs' ? '#F1F5F9' : '#FEE2E2',
+                      border: algoMode === 'dp' ? '1.5px solid #10B981' : algoMode === 'fcfs' ? '1.5px solid #64748B' : '1px dashed #EF4444',
+                      borderRadius: '5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '9.5px',
+                      fontWeight: '800',
+                      color: algoMode === 'dp' ? '#065F46' : algoMode === 'fcfs' ? '#1E293B' : '#991B1B',
+                      boxShadow: algoMode === 'dp' && simTimeMin >= 0 && simTimeMin < 50 ? '0 0 6px rgba(16, 185, 129, 0.5)' : 'none',
+                    }}
+                  >
+                    {algoMode === 'dp'
+                      ? (simTimeMin >= 50 ? '✔ Block 2 (+65)' : '🔧 Active (USFD)')
+                      : algoMode === 'fcfs' ? '✔ Ticket #1 (65)' : '❌ Overlapped'}
+                  </div>
+
+                  {/* Block 3 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '25%',
+                      width: '20.8%',
+                      height: '100%',
+                      background: algoMode === 'dp'
+                        ? (simTimeMin >= 110 ? '#DCFCE7' : simTimeMin >= 60 ? '#ECFDF5' : '#F8FAFC')
+                        : '#FEE2E2',
+                      border: algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
+                      borderRadius: '5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '9.5px',
+                      fontWeight: '800',
+                      color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                      boxShadow: algoMode === 'dp' && simTimeMin >= 60 && simTimeMin < 110 ? '0 0 6px rgba(16, 185, 129, 0.5)' : 'none',
+                    }}
+                  >
+                    {algoMode === 'dp'
+                      ? (simTimeMin >= 110 ? '✔ Block 3 (+65)' : simTimeMin >= 60 ? '🔧 Active (S&T)' : 'Pending (09:00)')
+                      : '❌ Overlapped'}
+                  </div>
+
+                  {/* Block 4 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '50%',
+                      width: '20.8%',
+                      height: '100%',
+                      background: algoMode === 'dp'
+                        ? (simTimeMin >= 170 ? '#DCFCE7' : simTimeMin >= 120 ? '#ECFDF5' : '#F8FAFC')
+                        : '#FEE2E2',
+                      border: algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
+                      borderRadius: '5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '9.5px',
+                      fontWeight: '800',
+                      color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                      boxShadow: algoMode === 'dp' && simTimeMin >= 120 && simTimeMin < 170 ? '0 0 6px rgba(16, 185, 129, 0.5)' : 'none',
+                    }}
+                  >
+                    {algoMode === 'dp'
+                      ? (simTimeMin >= 170 ? '✔ Block 4 (+65)' : simTimeMin >= 120 ? '🔧 Active (OHE)' : 'Pending (10:00)')
+                      : '❌ Overlapped'}
+                  </div>
+
+                  {/* Block 5 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '75%',
+                      width: '20.8%',
+                      height: '100%',
+                      background: algoMode === 'dp'
+                        ? (simTimeMin >= 230 ? '#DCFCE7' : simTimeMin >= 180 ? '#ECFDF5' : '#F8FAFC')
+                        : '#FEE2E2',
+                      border: algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
+                      borderRadius: '5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '9.5px',
+                      fontWeight: '800',
+                      color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                      boxShadow: algoMode === 'dp' && simTimeMin >= 180 && simTimeMin < 230 ? '0 0 6px rgba(16, 185, 129, 0.5)' : 'none',
+                    }}
+                  >
+                    {algoMode === 'dp'
+                      ? (simTimeMin >= 230 ? '✔ Block 5 (+65)' : simTimeMin >= 180 ? '🔧 Active (Tamp)' : 'Pending (11:00)')
+                      : '❌ Overlapped'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* =================================================================
+                LIVE SIMULATION DISPATCH TICKER (REAL-TIME STATUS & DIAGNOSTICS)
+                ================================================================= */}
+            <div
+              style={{
+                background: simStatus.phase === 'CONFLICT' ? '#FEF2F2' : simStatus.phase === 'COLLISION' ? '#FFFBEB' : '#FFFFFF',
+                border: `1.5px solid ${simStatus.signalColor}`,
+                borderRadius: '8px',
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '10px',
+                marginBottom: '10px',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span
                   style={{
-                    position: 'absolute',
-                    left: '75%',
-                    width: '20.8%',
-                    height: '100%',
-                    background: algoMode === 'dp' ? '#DCFCE7' : '#FEE2E2',
-                    border: algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9.5px',
+                    fontSize: '11px',
                     fontWeight: '800',
-                    color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                    padding: '3px 8px',
+                    borderRadius: '4px',
+                    background: simStatus.signalColor,
+                    color: '#FFFFFF',
+                    fontFamily: 'var(--font-mono)',
                   }}
                 >
-                  {algoMode === 'dp' ? '✔ Block 5 (65)' : '❌ Overlapped'}
+                  {simStatus.signal}
+                </span>
+
+                <div style={{ fontSize: '11.5px', color: '#0F172A', fontWeight: '600' }}>
+                  {simStatus.msg}
                 </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                {algoMode === 'greedy' && simStatus.delays > 0 && (
+                  <span style={{ color: '#DC2626', fontWeight: '800', background: '#FEE2E2', padding: '2px 6px', borderRadius: '4px' }}>
+                    ⚠️ {simStatus.delays} Trains Delayed
+                  </span>
+                )}
+                {algoMode === 'dp' && (
+                  <span style={{ color: '#059669', fontWeight: '800', background: '#DCFCE7', padding: '2px 6px', borderRadius: '4px' }}>
+                    ✔ 0 Train Delays
+                  </span>
+                )}
               </div>
             </div>
 
