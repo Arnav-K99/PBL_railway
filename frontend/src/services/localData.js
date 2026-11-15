@@ -1294,7 +1294,6 @@ function runLocalShowcaseComparison() {
     { metric: 'Tasks Scheduled', fcfs: fcfsMetrics.tasks_scheduled, greedy: greedyMetrics.tasks_scheduled, dp: dpMetrics.tasks_scheduled, unit: 'tasks', description: 'Number of maintenance activities successfully assigned to track blocks' },
     { metric: 'Tasks Unscheduled', fcfs: fcfsMetrics.tasks_unscheduled, greedy: greedyMetrics.tasks_unscheduled, dp: dpMetrics.tasks_unscheduled, unit: 'tasks', description: 'Number of maintenance activities unassigned due to operational conflicts' },
     { metric: 'Blocks Generated', fcfs: fcfsMetrics.blocks_generated, greedy: greedyMetrics.blocks_generated, dp: dpMetrics.blocks_generated, unit: 'blocks', description: 'Total maintenance block possession windows opened on tracks' },
-    { metric: 'Block Utilization', fcfs: `${fcfsMetrics.active_block_utilization_pct}%`, greedy: `${greedyMetrics.active_block_utilization_pct}%`, dp: `${dpMetrics.active_block_utilization_pct}%`, unit: '%', description: 'Active Block Utilization: Total occupied block duration / Total scheduled window capacity' },
     { metric: 'Clubbed Tasks', fcfs: fcfsMetrics.clubbed_tasks, greedy: greedyMetrics.clubbed_tasks, dp: dpMetrics.clubbed_tasks, unit: 'tasks', description: 'Tasks co-located in blocks containing more than 1 distinct task' },
     { metric: 'Cross-Department Blocks', fcfs: fcfsMetrics.cross_department_blocks, greedy: greedyMetrics.cross_department_blocks, dp: dpMetrics.cross_department_blocks, unit: 'blocks', description: 'Maintenance blocks combining tasks from at least two distinct departments (Engineering, S&T, Traction)' },
   ];
@@ -1424,14 +1423,6 @@ export function runLocalComparison(
       dp: dpMetrics.blocks_generated,
       unit: 'blocks',
       description: 'Total maintenance block possession windows opened on tracks',
-    },
-    {
-      metric: 'Block Utilization',
-      fcfs: `${fcfsMetrics.active_block_utilization_pct}%`,
-      greedy: `${greedyMetrics.active_block_utilization_pct}%`,
-      dp: `${dpMetrics.active_block_utilization_pct}%`,
-      unit: '%',
-      description: 'Active Block Utilization: Total occupied block duration / Total scheduled window capacity',
     },
     {
       metric: 'Clubbed Tasks',

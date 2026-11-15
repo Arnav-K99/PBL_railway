@@ -935,11 +935,10 @@ def build_comparison_table(
     dp_metrics: AlgorithmComparisonMetrics,
 ) -> List[ComparisonMetricItem]:
     """
-    Constructs the 6-row standard comparison table matching prompt specifications:
+    Constructs the standard comparison table across all 3 algorithms:
     - Tasks Scheduled
     - Tasks Unscheduled
     - Blocks Generated
-    - Block Utilization
     - Clubbed Tasks
     - Cross-Department Blocks
     """
@@ -967,14 +966,6 @@ def build_comparison_table(
             dp=dp_metrics.blocks_generated,
             unit="blocks",
             description="Total maintenance block possession windows opened on tracks",
-        ),
-        ComparisonMetricItem(
-            metric="Block Utilization",
-            fcfs=f"{fcfs_metrics.active_block_utilization_pct}%",
-            greedy=f"{greedy_metrics.active_block_utilization_pct}%",
-            dp=f"{dp_metrics.active_block_utilization_pct}%",
-            unit="%",
-            description="Active Block Utilization: Total occupied block duration / Total scheduled window capacity",
         ),
         ComparisonMetricItem(
             metric="Clubbed Tasks",

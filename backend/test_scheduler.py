@@ -374,13 +374,12 @@ def test_comparison_service_and_metrics_consistency():
 
     # 3. Verify comparison table row labels and counts
     table = comparison.comparison_table
-    assert len(table) == 6
+    assert len(table) == 5
     metric_names = [row.metric for row in table]
     expected_metrics = [
         "Tasks Scheduled",
         "Tasks Unscheduled",
         "Blocks Generated",
-        "Block Utilization",
         "Clubbed Tasks",
         "Cross-Department Blocks",
     ]
@@ -396,8 +395,6 @@ def test_comparison_service_and_metrics_consistency():
             assert row.fcfs == 8 and row.greedy == 8 and row.dp == 4
         elif row.metric == "Blocks Generated":
             assert row.fcfs == 2 and row.greedy == 1 and row.dp == 4
-        elif row.metric == "Block Utilization":
-            assert row.fcfs == "61.1%" and row.greedy == "100.0%" and row.dp == "66.7%"
         elif row.metric == "Clubbed Tasks":
             assert row.fcfs == 0 and row.greedy == 2 and row.dp == 3
         elif row.metric == "Cross-Department Blocks":
