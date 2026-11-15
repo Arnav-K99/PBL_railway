@@ -29,10 +29,634 @@ from models.schemas import (
     AlgorithmComparisonResponse,
     DecisionStep,
 )
-from services.greedy_scheduler import time_to_minutes
+from services.greedy_scheduler import time_to_minutes, is_overlapping
 from services.fcfs_scheduler import run_fcfs_scheduler
 from services.greedy_scheduler import run_greedy_scheduler
 from services.dp_scheduler import run_dp_scheduler
+
+
+def get_showcase_scenario():
+    """
+    Controlled PBL Benchmark Scenario (Part 7):
+    - Railway section: A-B (Track 1)
+    - Total available maintenance window: 07:45 - 12:15 (270 minutes)
+    - 7 feasible candidate blocks (A to G)
+    - Exactly 10 unique maintenance tasks across Engineering, S&T, and Traction
+    - Candidate submission order: B -> C -> A -> D -> E -> F -> G
+    """
+    op_date = "2026-09-20"
+
+    candidates = [
+        {
+            "id": "BLK-A",
+            "name": "Candidate A",
+            "start": "07:45",
+            "end": "12:15",
+            "dur_min": 270,
+            "tasks": [
+                MaintenanceTask(
+                    task_id="TASK-01",
+                    department="Engineering",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="07:45",
+                    latest_end="12:15",
+                    duration=4.5,
+                    arrival_time="06:10",
+                    description="CWR Stress Relief & Track Realignment",
+                ),
+                MaintenanceTask(
+                    task_id="TASK-02",
+                    department="Signal & Telecom",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="07:45",
+                    latest_end="12:15",
+                    duration=4.5,
+                    arrival_time="06:10",
+                    description="Main Track Circuit Integrated Calibration",
+                ),
+            ],
+        },
+        {
+            "id": "BLK-B",
+            "name": "Candidate B",
+            "start": "08:30",
+            "end": "09:45",
+            "dur_min": 75,
+            "tasks": [
+                MaintenanceTask(
+                    task_id="TASK-03",
+                    department="Engineering",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="08:30",
+                    latest_end="09:45",
+                    duration=1.25,
+                    arrival_time="06:00",
+                    description="Ultrasonic Rail Flaw Detection",
+                ),
+            ],
+        },
+        {
+            "id": "BLK-C",
+            "name": "Candidate C",
+            "start": "10:00",
+            "end": "11:30",
+            "dur_min": 90,
+            "tasks": [
+                MaintenanceTask(
+                    task_id="TASK-04",
+                    department="Signal & Telecom",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="10:00",
+                    latest_end="11:30",
+                    duration=1.5,
+                    arrival_time="06:05",
+                    description="Digital Axle Counter Diagnostic Overhaul",
+                ),
+            ],
+        },
+        {
+            "id": "BLK-D",
+            "name": "Candidate D",
+            "start": "08:00",
+            "end": "08:45",
+            "dur_min": 45,
+            "tasks": [
+                MaintenanceTask(
+                    task_id="TASK-05",
+                    department="Engineering",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="08:00",
+                    latest_end="08:45",
+                    duration=0.75,
+                    arrival_time="06:15",
+                    description="Switch Diamond Crossing Tamp",
+                ),
+                MaintenanceTask(
+                    task_id="TASK-06",
+                    department="Signal & Telecom",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="08:00",
+                    latest_end="08:45",
+                    duration=0.75,
+                    arrival_time="06:15",
+                    description="Point Motor Interlock Test",
+                ),
+                MaintenanceTask(
+                    task_id="TASK-07",
+                    department="Traction",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="08:00",
+                    latest_end="08:45",
+                    duration=0.75,
+                    arrival_time="06:15",
+                    description="OHE Section Insulator Inspection",
+                ),
+            ],
+        },
+        {
+            "id": "BLK-E",
+            "name": "Candidate E",
+            "start": "09:00",
+            "end": "09:45",
+            "dur_min": 45,
+            "tasks": [
+                MaintenanceTask(
+                    task_id="TASK-08",
+                    department="Traction",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="09:00",
+                    latest_end="09:45",
+                    duration=0.75,
+                    arrival_time="06:20",
+                    description="Catenary Dropper Re-clamping",
+                ),
+            ],
+        },
+        {
+            "id": "BLK-F",
+            "name": "Candidate F",
+            "start": "10:00",
+            "end": "10:45",
+            "dur_min": 45,
+            "tasks": [
+                MaintenanceTask(
+                    task_id="TASK-09",
+                    department="Engineering",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="10:00",
+                    latest_end="10:45",
+                    duration=0.75,
+                    arrival_time="06:25",
+                    description="Track Fastener Torque Tightening",
+                ),
+            ],
+        },
+        {
+            "id": "BLK-G",
+            "name": "Candidate G",
+            "start": "11:00",
+            "end": "11:45",
+            "dur_min": 45,
+            "tasks": [
+                MaintenanceTask(
+                    task_id="TASK-10",
+                    department="Signal & Telecom",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="11:00",
+                    latest_end="11:45",
+                    duration=0.75,
+                    arrival_time="06:30",
+                    description="Audio Frequency Track Circuit Tune",
+                ),
+            ],
+        },
+    ]
+
+    all_tasks = [t for c in candidates for t in c["tasks"]]
+    window_corridor = [
+        AvailableBlock(
+            block_id="BLK-WIN-AB",
+            section="A-B",
+            track="Track 1",
+            date=op_date,
+            start_time="07:45",
+            end_time="12:15",
+        )
+    ]
+    return candidates, all_tasks, window_corridor
+
+
+def run_showcase_comparison() -> AlgorithmComparisonResponse:
+    """
+    Executes real deterministic algorithmic comparison on the Part 7 Showcase Scenario:
+    Section A-B, 270 minutes available.
+    - FCFS: selects B, C (2 scheduled, 8 unscheduled, 2 blocks, 61.1% util, 0 clubbed, 0 cross-dept)
+    - Greedy: selects A (2 scheduled, 8 unscheduled, 1 block, 100% util, 2 clubbed, 1 cross-dept)
+    - DP: selects D, E, F, G (6 scheduled, 4 unscheduled, 4 blocks, 66.7% util, 3 clubbed, 1 cross-dept)
+    """
+    candidates, all_tasks, window_corridor = get_showcase_scenario()
+    cand_by_id = {c["id"]: c for c in candidates}
+    total_window_min = 270.0  # 07:45 to 12:15
+    total_window_hours = 4.5
+    op_date = "2026-09-20"
+    all_task_ids = [t.task_id for t in all_tasks]
+
+    # --- 1. REAL FCFS EXECUTION ---
+    # Submission arrival order: B -> C -> A -> D -> E -> F -> G
+    t0_fcfs = time.perf_counter()
+    fcfs_order = ["BLK-B", "BLK-C", "BLK-A", "BLK-D", "BLK-E", "BLK-F", "BLK-G"]
+    selected_fcfs_ids = []
+    fcfs_steps = []
+
+    for idx, cid in enumerate(fcfs_order):
+        c = cand_by_id[cid]
+        s_m = time_to_minutes(c["start"])
+        e_m = time_to_minutes(c["end"])
+        conflicting_blocks = [
+            sel_id
+            for sel_id in selected_fcfs_ids
+            if is_overlapping(
+                s_m,
+                e_m,
+                time_to_minutes(cand_by_id[sel_id]["start"]),
+                time_to_minutes(cand_by_id[sel_id]["end"]),
+            )
+        ]
+        if not conflicting_blocks:
+            selected_fcfs_ids.append(cid)
+            fcfs_steps.append(
+                DecisionStep(
+                    step_number=idx + 1,
+                    entity_id=cid,
+                    key_attribute=f"Arrival Pos #{idx+1} ({c['start']}–{c['end']})",
+                    action="CANDIDATE_SELECTED",
+                    block_id=cid,
+                    state_detail=f"Duration: {c['dur_min']}m | {len(c['tasks'])} task(s)",
+                    rationale=f"Selected in arrival order without conflict. Committed to section A-B ({c['start']}–{c['end']}).",
+                )
+            )
+        else:
+            conflict_str = ", ".join(conflicting_blocks)
+            fcfs_steps.append(
+                DecisionStep(
+                    step_number=idx + 1,
+                    entity_id=cid,
+                    key_attribute=f"Arrival Pos #{idx+1} ({c['start']}–{c['end']})",
+                    action="OVERLAP_REJECTED",
+                    block_id=cid,
+                    state_detail=f"Conflicts with: {conflict_str}",
+                    rationale=f"Rejected due to physical track possession overlap with earlier accepted block(s) {conflict_str}.",
+                )
+            )
+
+    t_fcfs_ms = round((time.perf_counter() - t0_fcfs) * 1000, 3)
+
+    fcfs_blocks = [
+        ScheduledBlock(
+            block_id=cid,
+            section="A-B",
+            track="Track 1",
+            date=op_date,
+            start_time=cand_by_id[cid]["start"],
+            end_time=cand_by_id[cid]["end"],
+            departments=list(dict.fromkeys(t.department for t in cand_by_id[cid]["tasks"])),
+            tasks=cand_by_id[cid]["tasks"],
+            block_duration=round(cand_by_id[cid]["dur_min"] / 60.0, 2),
+            window_capacity_hours=round(cand_by_id[cid]["dur_min"] / 60.0, 2),
+            utilization_percentage=100.0,
+            status="Scheduled",
+        )
+        for cid in selected_fcfs_ids
+    ]
+    fcfs_sched_task_ids = {t.task_id for b in fcfs_blocks for t in b.tasks}
+    fcfs_unscheduled = [
+        UnscheduledTask(
+            task=t,
+            reason="Dropped: Candidate block rejected due to FCFS track occupancy overlap on section A-B",
+        )
+        for t in all_tasks
+        if t.task_id not in fcfs_sched_task_ids
+    ]
+    fcfs_occ_min = sum(cand_by_id[cid]["dur_min"] for cid in selected_fcfs_ids)
+    fcfs_util_pct = round((fcfs_occ_min / total_window_min) * 100, 1)
+    fcfs_clubbed_tasks = sum(len(b.tasks) for b in fcfs_blocks if len(b.tasks) > 1)
+    fcfs_cross_dept = sum(1 for b in fcfs_blocks if len(b.departments) >= 2)
+
+    fcfs_metrics = AlgorithmComparisonMetrics(
+        tasks_scheduled=len(fcfs_sched_task_ids),
+        tasks_unscheduled=len(fcfs_unscheduled),
+        blocks_generated=len(fcfs_blocks),
+        block_utilization_pct=fcfs_util_pct,
+        active_block_utilization_pct=fcfs_util_pct,
+        total_occupied_duration=round(fcfs_occ_min / 60.0, 2),
+        total_available_duration=total_window_hours,
+        clubbed_tasks=fcfs_clubbed_tasks,
+        cross_department_blocks=fcfs_cross_dept,
+        department_consolidation=round(
+            sum(len(b.departments) for b in fcfs_blocks) / len(fcfs_blocks), 2
+        )
+        if fcfs_blocks
+        else 0.0,
+    )
+
+    # --- 2. REAL GREEDY EXECUTION ---
+    # Sort candidates by earliest start time: A (07:45), D (08:00), B (08:30), E (09:00), C (10:00), F (10:00), G (11:00)
+    t0_greedy = time.perf_counter()
+    greedy_cands = sorted(candidates, key=lambda c: time_to_minutes(c["start"]))
+    selected_greedy_ids = []
+    greedy_steps = []
+
+    for idx, c in enumerate(greedy_cands):
+        cid = c["id"]
+        s_m = time_to_minutes(c["start"])
+        e_m = time_to_minutes(c["end"])
+        conflicting_blocks = [
+            sel_id
+            for sel_id in selected_greedy_ids
+            if is_overlapping(
+                s_m,
+                e_m,
+                time_to_minutes(cand_by_id[sel_id]["start"]),
+                time_to_minutes(cand_by_id[sel_id]["end"]),
+            )
+        ]
+        if not conflicting_blocks:
+            selected_greedy_ids.append(cid)
+            greedy_steps.append(
+                DecisionStep(
+                    step_number=idx + 1,
+                    entity_id=cid,
+                    key_attribute=f"Earliest Start: {c['start']} (Pos #{idx+1})",
+                    action="CANDIDATE_SELECTED",
+                    block_id=cid,
+                    state_detail=f"Duration: {c['dur_min']}m | {len(c['tasks'])} task(s)",
+                    rationale=f"Candidate starts earliest ({c['start']}). Greedily committed to section A-B ({c['start']}–{c['end']}).",
+                )
+            )
+        else:
+            conflict_str = ", ".join(conflicting_blocks)
+            greedy_steps.append(
+                DecisionStep(
+                    step_number=idx + 1,
+                    entity_id=cid,
+                    key_attribute=f"Start: {c['start']} (Pos #{idx+1})",
+                    action="OVERLAP_REJECTED",
+                    block_id=cid,
+                    state_detail=f"Conflicts with: {conflict_str}",
+                    rationale=f"Rejected: Earliest-start assignment {conflict_str} already occupies section A-B during {c['start']}–{c['end']}.",
+                )
+            )
+
+    t_greedy_ms = round((time.perf_counter() - t0_greedy) * 1000, 3)
+
+    greedy_blocks = [
+        ScheduledBlock(
+            block_id=cid,
+            section="A-B",
+            track="Track 1",
+            date=op_date,
+            start_time=cand_by_id[cid]["start"],
+            end_time=cand_by_id[cid]["end"],
+            departments=list(dict.fromkeys(t.department for t in cand_by_id[cid]["tasks"])),
+            tasks=cand_by_id[cid]["tasks"],
+            block_duration=round(cand_by_id[cid]["dur_min"] / 60.0, 2),
+            window_capacity_hours=round(cand_by_id[cid]["dur_min"] / 60.0, 2),
+            utilization_percentage=100.0,
+            status="Scheduled",
+        )
+        for cid in selected_greedy_ids
+    ]
+    greedy_sched_task_ids = {t.task_id for b in greedy_blocks for t in b.tasks}
+    greedy_unscheduled = [
+        UnscheduledTask(
+            task=t,
+            reason="Dropped: Overlapped by greedy earliest-start block BLK-A on section A-B",
+        )
+        for t in all_tasks
+        if t.task_id not in greedy_sched_task_ids
+    ]
+    greedy_occ_min = sum(cand_by_id[cid]["dur_min"] for cid in selected_greedy_ids)
+    greedy_util_pct = round((greedy_occ_min / total_window_min) * 100, 1)
+    greedy_clubbed_tasks = sum(len(b.tasks) for b in greedy_blocks if len(b.tasks) > 1)
+    greedy_cross_dept = sum(1 for b in greedy_blocks if len(b.departments) >= 2)
+
+    greedy_metrics = AlgorithmComparisonMetrics(
+        tasks_scheduled=len(greedy_sched_task_ids),
+        tasks_unscheduled=len(greedy_unscheduled),
+        blocks_generated=len(greedy_blocks),
+        block_utilization_pct=greedy_util_pct,
+        active_block_utilization_pct=greedy_util_pct,
+        total_occupied_duration=round(greedy_occ_min / 60.0, 2),
+        total_available_duration=total_window_hours,
+        clubbed_tasks=greedy_clubbed_tasks,
+        cross_department_blocks=greedy_cross_dept,
+        department_consolidation=round(
+            sum(len(b.departments) for b in greedy_blocks) / len(greedy_blocks), 2
+        )
+        if greedy_blocks
+        else 0.0,
+    )
+
+    # --- 3. REAL DYNAMIC PROGRAMMING (WEIGHTED INTERVAL SCHEDULING) ---
+    # Sort candidates by finish time: D (08:45), B (09:45), E (09:45), F (10:45), C (11:30), G (11:45), A (12:15)
+    t0_dp = time.perf_counter()
+    dp_cands = sorted(candidates, key=lambda c: time_to_minutes(c["end"]))
+    n = len(dp_cands)
+
+    # Calculate predecessor array p(i)
+    p = [0] * (n + 1)
+    for i in range(1, n + 1):
+        s_i = time_to_minutes(dp_cands[i - 1]["start"])
+        for j in range(i - 1, 0, -1):
+            e_j = time_to_minutes(dp_cands[j - 1]["end"])
+            if e_j <= s_i:  # Half-open interval [start, end)
+                p[i] = j
+                break
+
+    # Bellman Recurrence: DP[i] = max(DP[i-1], weight[i] + DP[p(i)])
+    # Weight equals count of unique maintenance tasks
+    dp_table = [0] * (n + 1)
+    take = [False] * (n + 1)
+    dp_steps = []
+
+    for i in range(1, n + 1):
+        c = dp_cands[i - 1]
+        w_i = len(c["tasks"])
+        incl = w_i + dp_table[p[i]]
+        excl = dp_table[i - 1]
+
+        pred_name = dp_cands[p[i] - 1]["id"] if p[i] > 0 else "None (0)"
+        if incl > excl:
+            dp_table[i] = incl
+            take[i] = True
+            action_desc = "DP_INCLUDE"
+            rat = f"W(i)={w_i} tasks. Include branch W(i)+DP[{p[i]}] = {incl} > Exclude branch DP[{i-1}] = {excl} -> ACCEPTED into subproblem"
+        else:
+            dp_table[i] = excl
+            action_desc = "DP_EXCLUDE"
+            rat = f"W(i)={w_i} task(s). Include branch W(i)+DP[{p[i]}] = {incl} <= Exclude branch DP[{i-1}] = {excl} -> EXCLUDED from subproblem"
+
+        dp_steps.append(
+            DecisionStep(
+                step_number=i,
+                entity_id=c["id"],
+                key_attribute=f"Finish: {c['end']} | p({i})={pred_name}",
+                action=action_desc,
+                block_id=c["id"],
+                state_detail=f"DP[{i}]={dp_table[i]} (Weight={w_i})",
+                rationale=rat,
+            )
+        )
+
+    # Backtracking reconstruction
+    curr = n
+    selected_dp_ids = []
+    backtrack_steps = []
+    step_ctr = n + 1
+
+    while curr > 0:
+        c = dp_cands[curr - 1]
+        w_curr = len(c["tasks"])
+        if take[curr] and w_curr + dp_table[p[curr]] == dp_table[curr]:
+            selected_dp_ids.append(c["id"])
+            next_idx = p[curr]
+            next_name = dp_cands[next_idx - 1]["id"] if next_idx > 0 else "Base 0"
+            backtrack_steps.append(
+                DecisionStep(
+                    step_number=step_ctr,
+                    entity_id=c["id"],
+                    key_attribute="Backtracking Reconstruction",
+                    action="OPTIMAL_BLOCK_SELECTED",
+                    block_id=c["id"],
+                    state_detail=f"Committed {c['id']} ({c['start']}–{c['end']}) -> Jump to p({curr})={next_name}",
+                    rationale=f"Global optimum: Candidate {c['id']} contributes {w_curr} tasks. Jumps to compatible predecessor {next_name}.",
+                )
+            )
+            step_ctr += 1
+            curr = p[curr]
+        else:
+            curr -= 1
+
+    selected_dp_ids.reverse()
+    dp_steps.extend(backtrack_steps)
+    t_dp_ms = round((time.perf_counter() - t0_dp) * 1000, 3)
+
+    dp_blocks = [
+        ScheduledBlock(
+            block_id=cid,
+            section="A-B",
+            track="Track 1",
+            date=op_date,
+            start_time=cand_by_id[cid]["start"],
+            end_time=cand_by_id[cid]["end"],
+            departments=list(dict.fromkeys(t.department for t in cand_by_id[cid]["tasks"])),
+            tasks=cand_by_id[cid]["tasks"],
+            block_duration=round(cand_by_id[cid]["dur_min"] / 60.0, 2),
+            window_capacity_hours=round(cand_by_id[cid]["dur_min"] / 60.0, 2),
+            utilization_percentage=100.0,
+            status="Scheduled",
+        )
+        for cid in selected_dp_ids
+    ]
+    dp_sched_task_ids = {t.task_id for b in dp_blocks for t in b.tasks}
+    dp_unscheduled = [
+        UnscheduledTask(
+            task=t,
+            reason="Unselected: Optimal WIS recurrence identified superior non-overlapping candidate combination (D + E + F + G)",
+        )
+        for t in all_tasks
+        if t.task_id not in dp_sched_task_ids
+    ]
+    dp_occ_min = sum(cand_by_id[cid]["dur_min"] for cid in selected_dp_ids)
+    dp_util_pct = round((dp_occ_min / total_window_min) * 100, 1)
+    dp_clubbed_tasks = sum(len(b.tasks) for b in dp_blocks if len(b.tasks) > 1)
+    dp_cross_dept = sum(1 for b in dp_blocks if len(b.departments) >= 2)
+
+    dp_metrics = AlgorithmComparisonMetrics(
+        tasks_scheduled=len(dp_sched_task_ids),
+        tasks_unscheduled=len(dp_unscheduled),
+        blocks_generated=len(dp_blocks),
+        block_utilization_pct=dp_util_pct,
+        active_block_utilization_pct=dp_util_pct,
+        total_occupied_duration=round(dp_occ_min / 60.0, 2),
+        total_available_duration=total_window_hours,
+        clubbed_tasks=dp_clubbed_tasks,
+        cross_department_blocks=dp_cross_dept,
+        department_consolidation=round(
+            sum(len(b.departments) for b in dp_blocks) / len(dp_blocks), 2
+        )
+        if dp_blocks
+        else 0.0,
+    )
+
+    # Build standardized comparison table
+    comparison_table = build_comparison_table(fcfs_metrics, greedy_metrics, dp_metrics)
+
+    fcfs_exec = AlgorithmExecutionResult(
+        algorithm_key="fcfs",
+        algorithm_name="First Come First Served (FCFS)",
+        algorithm_description="Processes candidate blocks strictly in submission arrival order (B -> C -> A -> D -> E -> F -> G). Selects B and C; rejects A, D, E, F, G due to track possession overlap.",
+        blocks=fcfs_blocks,
+        unscheduled=fcfs_unscheduled,
+        metrics=fcfs_metrics,
+        execution_time_ms=t_fcfs_ms,
+        dsa_notes=[
+            "Queue-based arrival processing: O(N * M)",
+            "Evaluates candidates strictly in submission sequence: B -> C -> A -> D -> E -> F -> G",
+            "Allocates earliest feasible non-conflicting candidates (B and C selected)",
+        ],
+        decision_steps=fcfs_steps,
+    )
+
+    greedy_exec = AlgorithmExecutionResult(
+        algorithm_key="greedy",
+        algorithm_name="Greedy Scheduling (Earliest Start Time)",
+        algorithm_description="Sorts candidate blocks by earliest start time. Candidate A begins earliest (07:45); selecting A locks section A-B for 270 minutes and rejects all remaining candidates.",
+        blocks=greedy_blocks,
+        unscheduled=greedy_unscheduled,
+        metrics=greedy_metrics,
+        execution_time_ms=t_greedy_ms,
+        dsa_notes=[
+            "Sorts candidate blocks by earliest start time: O(M log M)",
+            "Candidate A (07:45) is selected immediately due to local earliest-start heuristic",
+            "Overlapping span (07:45-12:15) starves all other 6 candidate blocks",
+        ],
+        decision_steps=greedy_steps,
+    )
+
+    dp_exec = AlgorithmExecutionResult(
+        algorithm_key="dp",
+        algorithm_name="Dynamic Programming (Weighted Interval Scheduling)",
+        algorithm_description="Sorts candidates by finish time, calculates predecessors p(i), and solves Bellman recurrence DP[i] = max(DP[i-1], W(i) + DP[p(i)]). Optimally selects combination D + E + F + G.",
+        blocks=dp_blocks,
+        unscheduled=dp_unscheduled,
+        metrics=dp_metrics,
+        execution_time_ms=t_dp_ms,
+        dsa_notes=[
+            "Sorts candidate intervals by finish time: O(M log M)",
+            "Calculates predecessor p(i) via binary search / compatibility scan",
+            "Solves recurrence: DP[i] = max(DP[i-1], W(i) + DP[p(i)])",
+            "Backtracking discovers globally optimal combination D + E + F + G (6 unique tasks)",
+        ],
+        decision_steps=dp_steps,
+    )
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    return AlgorithmComparisonResponse(
+        scenario_id="showcase",
+        scenario_name="Controlled PBL Benchmark Scenario (Section A–B)",
+        operation_date=op_date,
+        execution_timestamp=now_str,
+        snapshot_timestamp=now_str,
+        total_input_tasks=len(all_tasks),
+        total_input_trains=0,
+        total_available_corridors=1,
+        comparison_table=comparison_table,
+        fcfs=fcfs_exec,
+        greedy=greedy_exec,
+        dp=dp_exec,
+    )
 
 
 def get_contested_scenario() -> Tuple[List[MaintenanceTask], List[TrainSchedule], List[AvailableBlock]]:
@@ -375,20 +999,25 @@ def compare_algorithms(
     tasks: List[MaintenanceTask],
     train_schedule: List[TrainSchedule],
     available_blocks: List[AvailableBlock],
-    scenario: str = "contested",
+    scenario: str = "showcase",
 ) -> AlgorithmComparisonResponse:
     """
     Runs FCFS, Greedy, and Dynamic Programming on identical isolated snapshots.
-    Supports either the default 20-task snapshot or the contested benchmark scenario.
+    Supports:
+    - 'showcase' (default): Controlled Single-Section PBL Showcase Benchmark (Part 7)
+    - 'operational' / 'default': Official 20-Task Baseline Dataset
+    - 'contested': Multi-Corridor Stress Benchmark
     Does NOT mutate input data or active global state.
     """
-    if scenario == "contested":
+    if scenario == "showcase":
+        return run_showcase_comparison()
+    elif scenario == "contested":
         tasks_in, trains_in, blocks_in = get_contested_scenario()
         scenario_id = "contested"
         scenario_name = "Contested Multi-Corridor Stress Benchmark"
     else:
         tasks_in, trains_in, blocks_in = tasks, train_schedule, available_blocks
-        scenario_id = "default"
+        scenario_id = "operational"
         scenario_name = "Official PBL Operations Snapshot (20 Tasks)"
 
     # Create isolated snapshot copies

@@ -14,10 +14,11 @@ export default function ComparisonPage({
   loading = false,
   trains = [],
 }) {
-  const currentScenario = comparisonData?.scenario_id || 'contested';
+  const currentScenario = comparisonData?.scenario_id || 'showcase';
   const [selectedScenario, setSelectedScenario] = useState(currentScenario);
   const [activeTab, setActiveTab] = useState('dp'); // 'fcfs' | 'greedy' | 'dp'
   const [decisionTab, setDecisionTab] = useState('dp'); // 'fcfs' | 'greedy' | 'dp'
+  const [beforeAfterAlgo, setBeforeAfterAlgo] = useState('dp'); // 'fcfs' | 'greedy' | 'dp'
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [timelineTrack, setTimelineTrack] = useState('Track 1');
 
@@ -42,6 +43,29 @@ export default function ComparisonPage({
 
   const decisionResult = comparisonData ? comparisonData[decisionTab] : null;
   const decisionSteps = decisionResult?.decision_steps || [];
+
+  const baResult = comparisonData ? comparisonData[beforeAfterAlgo] : null;
+  const baBlocks = baResult?.blocks || [];
+  const baUnscheduled = baResult?.unscheduled || [];
+
+  // Extract all unique input tasks from scheduled and unscheduled
+  const baInputTasks = [
+    ...baBlocks.flatMap((b) =>
+      b.tasks.map((t) => ({ ...t, isScheduled: true, assignedBlock: b.block_id }))
+    ),
+    ...baUnscheduled.map((u) => ({
+      ...u.task,
+      isScheduled: false,
+      assignedBlock: null,
+      rejectReason: u.reason,
+    })),
+  ].sort((a, b) => (a.task_id > b.task_id ? 1 : -1));
+
+  const totalRawHours = baInputTasks.reduce((acc, t) => acc + (t.duration || 0), 0);
+  const totalPossessionHours = baBlocks.reduce((acc, b) => acc + (b.block_duration || 0), 0);
+  const netHoursSaved = Math.max(0, totalRawHours - totalPossessionHours);
+  const consolidationSavingsPct =
+    totalRawHours > 0 ? Math.round((netHoursSaved / totalRawHours) * 100) : 0;
 
   // Pick currently inspected block or default to first
   const currentBlock =
@@ -79,13 +103,27 @@ export default function ComparisonPage({
             <span
               className="badge-tag"
               style={{
-                background: selectedScenario === 'contested' ? '#FEF3C7' : '#E2E8F0',
-                color: selectedScenario === 'contested' ? '#92400E' : '#1E293B',
+                background:
+                  selectedScenario === 'showcase'
+                    ? '#ECFDF5'
+                    : selectedScenario === 'contested'
+                    ? '#FEF3C7'
+                    : '#E2E8F0',
+                color:
+                  selectedScenario === 'showcase'
+                    ? '#065F46'
+                    : selectedScenario === 'contested'
+                    ? '#92400E'
+                    : '#1E293B',
                 fontWeight: '700',
                 fontSize: '11px',
               }}
             >
-              {selectedScenario === 'contested' ? 'STRESS BENCHMARK' : 'STANDARD SNAPSHOT'}
+              {selectedScenario === 'showcase'
+                ? 'SHOWCASE BENCHMARK (A–B)'
+                : selectedScenario === 'contested'
+                ? 'STRESS BENCHMARK'
+                : 'STANDARD SNAPSHOT'}
             </span>
           </div>
           <div className="page-description">
@@ -97,13 +135,13 @@ export default function ComparisonPage({
           {/* Scenario Selector Switcher */}
           <div className="scenario-selector">
             <button
-              id="btn-scenario-contested"
-              className={`scenario-btn ${selectedScenario === 'contested' ? 'active' : ''}`}
-              onClick={() => handleScenarioChange('contested')}
+              id="btn-scenario-showcase"
+              className={`scenario-btn ${selectedScenario === 'showcase' ? 'active' : ''}`}
+              onClick={() => handleScenarioChange('showcase')}
               disabled={loading}
-              title="Multi-corridor competition benchmark proving DP superiority over Greedy and FCFS"
+              title="Controlled Single-Section A-B Benchmark (07:45-12:15, 7 Candidate Blocks, 10 Tasks) demonstrating exact algorithmic divergence"
             >
-              Stress Benchmark (Divergent)
+              PBL Showcase Benchmark (A–B)
             </button>
             <button
               id="btn-scenario-default"
@@ -112,7 +150,16 @@ export default function ComparisonPage({
               disabled={loading}
               title="Official 20-Task PBL Baseline with hard corridor physical ceilings"
             >
-              Default Dataset (20 Tasks)
+              Actual Dataset (20 Tasks)
+            </button>
+            <button
+              id="btn-scenario-contested"
+              className={`scenario-btn ${selectedScenario === 'contested' ? 'active' : ''}`}
+              onClick={() => handleScenarioChange('contested')}
+              disabled={loading}
+              title="Multi-corridor competition benchmark proving DP superiority over Greedy and FCFS"
+            >
+              Contested Stress Test
             </button>
           </div>
 
@@ -310,14 +357,54 @@ export default function ComparisonPage({
             lineHeight: 1.5,
           }}
         >
-          {selectedScenario === 'default' ? (
+          {selectedScenario === 'showcase' ? (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <strong style={{ color: '#065F46', fontSize: '12.5px' }}>
+                  ★ Controlled Showcase Scenario: Section A–B Corridor (07:45–12:15, 270 Min Window, 7 Candidate Blocks, 10 Tasks)
+                </strong>
+                <span className="badge-tag" style={{ background: '#ECFDF5', color: '#065F46', fontWeight: '700' }}>
+                  DETERMINISTIC EMPIRICAL PROOF
+                </span>
+              </div>
+              <div>
+                Seven candidate maintenance blocks (<code>BLK-A</code> through <code>BLK-G</code>) compete for the same physical track corridor on Section A–B. Ten unique tasks across Engineering, S&T, and Traction are requested. Submission arrival order: <code>B → C → A → D → E → F → G</code>.
+              </div>
+              <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
+                <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: '4px', border: '1px solid #CBD5E1' }}>
+                  <div style={{ fontWeight: '700', color: '#1E293B', marginBottom: '4px' }}>
+                    1. FCFS: 2 Sched / 2 Blocks (61.1% Util)
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#475569', lineHeight: 1.4 }}>
+                    Evaluates arrival order: accepts <code>BLK-B</code> (08:30–09:45) and <code>BLK-C</code> (10:00–11:30). These two blocks create track occupancy deadlocks that overlap and reject all other 5 candidates.
+                  </div>
+                </div>
+                <div style={{ background: '#FFFFFF', padding: '10px 12px', borderRadius: '4px', border: '1px solid #CBD5E1' }}>
+                  <div style={{ fontWeight: '700', color: '#B45309', marginBottom: '4px' }}>
+                    2. Greedy: 2 Sched / 1 Block (100.0% Util)
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#475569', lineHeight: 1.4 }}>
+                    Sorts by earliest start: <code>BLK-A</code> starts earliest at 07:45 and spans the entire 270 min (12:15). Greedily locks Section A–B for all 4.5h, rejecting all remaining 6 candidates despite their higher collective task count.
+                  </div>
+                </div>
+                <div style={{ background: '#F0FDF4', padding: '10px 12px', borderRadius: '4px', border: '1px solid #86EFAC' }}>
+                  <div style={{ fontWeight: '700', color: '#166534', marginBottom: '4px' }}>
+                    3. DP: 6 Sched / 4 Blocks (66.7% Util) 🏆
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#166534', lineHeight: 1.4 }}>
+                    Solves Bellman recurrence: selects 4 non-overlapping intervals (<code>BLK-D</code>, <code>BLK-E</code>, <code>BLK-F</code>, <code>BLK-G</code>). Yields <strong>6 tasks scheduled (+200% over Greedy/FCFS)</strong> with 3 clubbed tasks!
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : selectedScenario === 'default' ? (
             <>
               <strong style={{ color: 'var(--c-text-primary)' }}>Why do all three algorithms yield 13 scheduled tasks / 3 blocks on the default dataset?</strong>
               <br />
               In this operational snapshot, 4 of the 7 authorized corridors (<code>BLK-102</code>, <code>BLK-103</code>, <code>BLK-105</code>, <code>BLK-107</code>) have hard train collisions with Rajdhani, Vande Bharat, Sanghamitra, and Freight trains. Track 4 has zero authorized windows. Exactly 13 tasks request the remaining 3 clear corridors (<code>BLK-101</code> on Track 1, <code>BLK-104</code> on Track 2, <code>BLK-106</code> on Track 3), and all 13 fit within those windows. Consequently, all three algorithms reach the physical problem ceiling for this dataset.
               <br />
               <span style={{ color: 'var(--c-text-primary)', fontWeight: '600' }}>
-                👉 Tip: Switch to the "Stress Benchmark (Divergent)" button above to observe multi-corridor competition where DP proves superior to Greedy!
+                👉 Tip: Switch to the "PBL Showcase Benchmark (A–B)" button above to observe controlled single-corridor algorithmic divergence!
               </span>
             </>
           ) : (
@@ -375,25 +462,38 @@ export default function ComparisonPage({
                   Greedy Approach (Earliest-Start)
                 </span>
                 <span className="cell-mono" style={{ fontSize: '11px', color: '#B45309', fontWeight: '700' }}>
-                  {comparisonData?.greedy?.metrics?.tasks_scheduled ?? 5} Sched / {comparisonData?.greedy?.metrics?.tasks_unscheduled ?? 7} Dropped
+                  {comparisonData?.greedy?.metrics?.tasks_scheduled ?? 2} Sched / {comparisonData?.greedy?.metrics?.tasks_unscheduled ?? 8} Dropped
                 </span>
               </div>
               <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#334155', lineHeight: 1.6 }}>
                 <li>
                   <strong>Decision Rule:</strong> Locally sorts tasks by earliest start time using Merge Sort O(N log N) and assigns to the first available fitting window.
                 </li>
-                <li>
-                  <strong>Action on Track 1:</strong> Commits early narrow corridor <code>BLK-C101</code> (08:00–10:00) for single task <code>TS-01</code>.
-                </li>
-                <li>
-                  <strong>Fatal Flaw (Local Short-Sightedness):</strong> Locking Track 1 until 10:00 makes <code>BLK-C102</code> (09:30–13:30) physically unfeasible due to track possession overlap!
-                </li>
-                <li>
-                  <strong>Downstream Impact:</strong> Tasks <code>TS-02</code>, <code>TS-03</code>, and <code>TS-04</code> are <strong>REJECTED</strong>. High-capacity 3-department clubbing is permanently lost.
-                </li>
-                <li>
-                  <strong>Action on Track 2:</strong> Repeats mistake: grabs narrow <code>BLK-C103</code> (11:00–13:00) for <code>TS-05</code>, dropping <code>TS-06</code>, <code>TS-07</code>, <code>TS-08</code>.
-                </li>
+                {selectedScenario === 'showcase' ? (
+                  <>
+                    <li>
+                      <strong>Action on Section A–B:</strong> Commits massive block <code>BLK-A</code> (07:45–12:15, 270m) because its start time 07:45 is the earliest of all candidates.
+                    </li>
+                    <li>
+                      <strong>Fatal Flaw (Local Monopolization):</strong> Locking Section A–B for all 4.5 hours leaves zero window for candidate blocks B, C, D, E, F, G!
+                    </li>
+                    <li>
+                      <strong>Downstream Impact:</strong> Eight tasks (80% of requests) are <strong>REJECTED</strong>. The high utilization (100%) hides severe operational under-servicing.
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <strong>Action on Track 1:</strong> Commits early narrow corridor <code>BLK-C101</code> (08:00–10:00) for single task <code>TS-01</code>.
+                    </li>
+                    <li>
+                      <strong>Fatal Flaw (Local Short-Sightedness):</strong> Locking Track 1 until 10:00 makes <code>BLK-C102</code> (09:30–13:30) physically unfeasible due to track possession overlap!
+                    </li>
+                    <li>
+                      <strong>Downstream Impact:</strong> Tasks <code>TS-02</code>, <code>TS-03</code>, and <code>TS-04</code> are <strong>REJECTED</strong>. High-capacity 3-department clubbing is permanently lost.
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
 
@@ -412,25 +512,38 @@ export default function ComparisonPage({
                   Dynamic Programming (WIS)
                 </span>
                 <span className="cell-mono" style={{ fontSize: '11px', color: '#16A34A', fontWeight: '700' }}>
-                  {comparisonData?.dp?.metrics?.tasks_scheduled ?? 11} Sched / {comparisonData?.dp?.metrics?.tasks_unscheduled ?? 1} Dropped (+120%)
+                  {comparisonData?.dp?.metrics?.tasks_scheduled ?? 6} Sched / {comparisonData?.dp?.metrics?.tasks_unscheduled ?? 4} Dropped (+200%)
                 </span>
               </div>
               <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#166534', lineHeight: 1.6 }}>
                 <li>
                   <strong>Decision Rule:</strong> Evaluates all candidate block combinations using Bellman recurrence: <code>DP[i] = max(DP[i-1], W(i) + DP[p(i)])</code>.
                 </li>
-                <li>
-                  <strong>Action on Track 1:</strong> Compares Candidate 1 (W = 1.5) vs Candidate 2 (W = 6.0 + 3.0 = 9.0). Selects Candidate 2!
-                </li>
-                <li>
-                  <strong>Optimal Substructure:</strong> Recognizes that sacrificing early single-task <code>TS-01</code> allows opening high-capacity <code>BLK-C102</code> (09:30–13:30).
-                </li>
-                <li>
-                  <strong>Synergy Multiplier:</strong> Simultaneously clubs <code>TS-02</code> (Eng), <code>TS-03</code> (S&T), and <code>TS-04</code> (Traction) in one track possession.
-                </li>
-                <li>
-                  <strong>Downstream Impact:</strong> Backtracking reconstructs the global optimal schedule, capturing 9 clubbed tasks across 3 departments!
-                </li>
+                {selectedScenario === 'showcase' ? (
+                  <>
+                    <li>
+                      <strong>Action on Section A–B:</strong> Sorts by finish time and evaluates all non-overlapping chains. Identifies that selecting <code>BLK-D</code> (3 tasks), <code>BLK-E</code> (1 task), <code>BLK-F</code> (1 task), and <code>BLK-G</code> (1 task) yields Weight = 6.
+                    </li>
+                    <li>
+                      <strong>Optimal Substructure:</strong> Discards monopolistic <code>BLK-A</code> (Weight = 2) in favor of the 4 synchronized 45-minute possessions.
+                    </li>
+                    <li>
+                      <strong>Synergy Multiplier:</strong> Schedules 6 total tasks (including 3-department clubbing in BLK-D), delivering 3× the maintenance throughput of Greedy!
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <strong>Action on Track 1:</strong> Compares Candidate 1 (W = 1.5) vs Candidate 2 (W = 6.0 + 3.0 = 9.0). Selects Candidate 2!
+                    </li>
+                    <li>
+                      <strong>Optimal Substructure:</strong> Recognizes that sacrificing early single-task <code>TS-01</code> allows opening high-capacity <code>BLK-C102</code> (09:30–13:30).
+                    </li>
+                    <li>
+                      <strong>Synergy Multiplier:</strong> Simultaneously clubs <code>TS-02</code> (Eng), <code>TS-03</code> (S&T), and <code>TS-04</code> (Traction) in one track possession.
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
           </div>
@@ -448,9 +561,10 @@ export default function ComparisonPage({
               border: '1px solid var(--c-border-light)',
             }}
           >
-            <span>⚡ <strong>Scheduled Tasks:</strong> Greedy: {comparisonData?.greedy?.metrics?.tasks_scheduled ?? 5} vs DP: {comparisonData?.dp?.metrics?.tasks_scheduled ?? 11} (<strong style={{ color: '#16A34A' }}>+120% Gain</strong>)</span>
-            <span>⚡ <strong>Clubbed Tasks:</strong> Greedy: {comparisonData?.greedy?.metrics?.clubbed_tasks ?? 3} vs DP: {comparisonData?.dp?.metrics?.clubbed_tasks ?? 9} (<strong style={{ color: '#16A34A' }}>+200% Gain</strong>)</span>
-            <span>⚡ <strong>Cross-Dept Blocks:</strong> Greedy: {comparisonData?.greedy?.metrics?.cross_department_blocks ?? 1} vs DP: {comparisonData?.dp?.metrics?.cross_department_blocks ?? 3} (<strong style={{ color: '#16A34A' }}>+200% Gain</strong>)</span>
+            <span>⚡ <strong>Tasks Scheduled:</strong> Greedy: {comparisonData?.greedy?.metrics?.tasks_scheduled ?? '-'} vs DP: {comparisonData?.dp?.metrics?.tasks_scheduled ?? '-'} (<strong style={{ color: '#16A34A' }}>+{(comparisonData?.dp?.metrics?.tasks_scheduled && comparisonData?.greedy?.metrics?.tasks_scheduled) ? Math.round(((comparisonData.dp.metrics.tasks_scheduled - comparisonData.greedy.metrics.tasks_scheduled) / comparisonData.greedy.metrics.tasks_scheduled) * 100) : 0}% Gain</strong>)</span>
+            <span>⚡ <strong>Blocks Generated:</strong> Greedy: {comparisonData?.greedy?.metrics?.blocks_generated ?? '-'} vs DP: {comparisonData?.dp?.metrics?.blocks_generated ?? '-'}</span>
+            <span>⚡ <strong>Active Utilization:</strong> Greedy: {comparisonData?.greedy?.metrics?.active_block_utilization_pct ?? 0}% vs DP: {comparisonData?.dp?.metrics?.active_block_utilization_pct ?? 0}%</span>
+            <span>⚡ <strong>Clubbed Tasks:</strong> Greedy: {comparisonData?.greedy?.metrics?.clubbed_tasks ?? 0} vs DP: {comparisonData?.dp?.metrics?.clubbed_tasks ?? 0}</span>
             <span>⚡ <strong>Optimality Guarantee:</strong> Greedy = Local Heuristic | DP = Globally Optimal (WIS)</span>
           </div>
         </div>
@@ -810,10 +924,224 @@ export default function ComparisonPage({
         </div>
       </div>
 
-      {/* SECTION E: Schedule Inspection & Track Occupancy */}
+      {/* SECTION E: Before vs After Scheduling (Request Consolidation Impact) */}
+      <div className="ops-panel anim-slide-in">
+        <div className="panel-header">
+          <div>
+            <div className="panel-title">Section E: Before vs After Scheduling (Request Consolidation Impact)</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--c-text-secondary)', marginTop: '2px' }}>
+              Contrasts unconsolidated departmental requests against consolidated maintenance blocks generated by the algorithm
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              id="btn-ba-fcfs"
+              className={`btn-seg ${beforeAfterAlgo === 'fcfs' ? 'active' : ''}`}
+              onClick={() => setBeforeAfterAlgo('fcfs')}
+            >
+              FCFS Consolidation ({comparisonData?.fcfs?.metrics?.blocks_generated ?? 0} blocks)
+            </button>
+            <button
+              id="btn-ba-greedy"
+              className={`btn-seg ${beforeAfterAlgo === 'greedy' ? 'active' : ''}`}
+              onClick={() => setBeforeAfterAlgo('greedy')}
+            >
+              Greedy Consolidation ({comparisonData?.greedy?.metrics?.blocks_generated ?? 0} blocks)
+            </button>
+            <button
+              id="btn-ba-dp"
+              className={`btn-seg ${beforeAfterAlgo === 'dp' ? 'active' : ''}`}
+              onClick={() => setBeforeAfterAlgo('dp')}
+            >
+              DP (WIS) Consolidation ({comparisonData?.dp?.metrics?.blocks_generated ?? 0} blocks)
+            </button>
+          </div>
+        </div>
+
+        <div className="panel-body">
+          {/* Consolidation Impact KPI Strip */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '12px',
+              marginBottom: '16px',
+            }}
+          >
+            <div style={{ background: 'var(--c-surface-alt)', border: '1px solid var(--c-border-light)', borderRadius: 'var(--radius-xs)', padding: '10px 14px' }}>
+              <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--c-text-secondary)', fontWeight: '600' }}>
+                Unconsolidated Track Time Requested
+              </div>
+              <div className="cell-mono" style={{ fontSize: '20px', fontWeight: '700', color: '#B45309', marginTop: '3px' }}>
+                {totalRawHours.toFixed(1)} hrs
+              </div>
+              <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
+                {baInputTasks.length} separate isolated requests
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--c-surface-alt)', border: '1px solid var(--c-border-light)', borderRadius: 'var(--radius-xs)', padding: '10px 14px' }}>
+              <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--c-text-secondary)', fontWeight: '600' }}>
+                Consolidated Track Windows Opened
+              </div>
+              <div className="cell-mono" style={{ fontSize: '20px', fontWeight: '700', color: '#2563EB', marginTop: '3px' }}>
+                {totalPossessionHours.toFixed(1)} hrs
+              </div>
+              <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
+                {baBlocks.length} synchronized physical possessions
+              </div>
+            </div>
+
+            <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 'var(--radius-xs)', padding: '10px 14px' }}>
+              <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#166534', fontWeight: '600' }}>
+                Net Possession Time Saved
+              </div>
+              <div className="cell-mono" style={{ fontSize: '20px', fontWeight: '700', color: '#16A34A', marginTop: '3px' }}>
+                {netHoursSaved.toFixed(1)} hrs ({consolidationSavingsPct}%)
+              </div>
+              <div style={{ fontSize: '10.5px', color: '#15803D', marginTop: '2px' }}>
+                Downtime saved by multi-department clubbing
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--c-surface-alt)', border: '1px solid var(--c-border-light)', borderRadius: 'var(--radius-xs)', padding: '10px 14px' }}>
+              <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--c-text-secondary)', fontWeight: '600' }}>
+                Simultaneous Clubbed Tasks
+              </div>
+              <div className="cell-mono" style={{ fontSize: '20px', fontWeight: '700', color: '#0D9488', marginTop: '3px' }}>
+                {baResult?.metrics?.clubbed_tasks ?? 0} tasks
+              </div>
+              <div style={{ fontSize: '10.5px', color: 'var(--c-text-muted)', marginTop: '2px' }}>
+                In {baResult?.metrics?.cross_department_blocks ?? 0} cross-department block(s)
+              </div>
+            </div>
+          </div>
+
+          {/* Side-by-Side Before vs After Layout */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>
+            {/* BEFORE: Raw Unconsolidated Departmental Requests */}
+            <div style={{ border: '1px solid var(--c-border)', borderRadius: 'var(--radius-xs)', background: '#FFFFFF', padding: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid var(--c-border-light)', paddingBottom: '8px' }}>
+                <div style={{ fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', color: '#B45309' }}>
+                  BEFORE: Unconsolidated Requests ({baInputTasks.length})
+                </div>
+                <span className="badge-tag" style={{ background: '#FEF3C7', color: '#92400E', fontWeight: '700', fontSize: '10.5px' }}>
+                  DISJOINT POSSESSIONS
+                </span>
+              </div>
+              <p style={{ fontSize: '11px', color: 'var(--c-text-secondary)', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                Individual requests submitted independently by Engineering, S&T, and Traction departments. Without clubbing, each requires a dedicated line block, multiplying track closure hours.
+              </p>
+
+              <div className="ops-table-container" style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                <table className="ops-table" style={{ fontSize: '11px' }}>
+                  <thead>
+                    <tr>
+                      <th>Task</th>
+                      <th>Dept</th>
+                      <th>Window</th>
+                      <th>Dur</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {baInputTasks.map((t) => (
+                      <tr key={t.task_id}>
+                        <td className="cell-mono" style={{ fontWeight: '700' }}>{t.task_id}</td>
+                        <td><DeptBadge department={t.department} /></td>
+                        <td className="cell-mono" style={{ fontSize: '10.5px' }}>{t.earliest_start}–{t.latest_end}</td>
+                        <td className="cell-mono">{t.duration}h</td>
+                        <td>
+                          {t.isScheduled ? (
+                            <span className="decision-badge decision-badge-club" style={{ fontSize: '10px' }}>
+                              In {t.assignedBlock}
+                            </span>
+                          ) : (
+                            <span className="decision-badge decision-badge-reject" style={{ fontSize: '10px' }}>
+                              Unscheduled
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* AFTER: Consolidated Maintenance Blocks Schedule */}
+            <div style={{ border: '1px solid var(--c-border)', borderRadius: 'var(--radius-xs)', background: '#FFFFFF', padding: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid var(--c-border-light)', paddingBottom: '8px' }}>
+                <div style={{ fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', color: '#166534' }}>
+                  AFTER: Consolidated Blocks ({baBlocks.length})
+                </div>
+                <span className="badge-tag" style={{ background: '#DCFCE7', color: '#166534', fontWeight: '700', fontSize: '10.5px' }}>
+                  SYNCHRONIZED POSSESSIONS
+                </span>
+              </div>
+              <p style={{ fontSize: '11px', color: 'var(--c-text-secondary)', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                Synchronized work windows where concurrent tasks run simultaneously under single safety possession (non-additive duration rule).
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '380px', overflowY: 'auto' }}>
+                {baBlocks.length === 0 ? (
+                  <div style={{ padding: '20px', textAlign: 'center', color: 'var(--c-text-muted)', fontSize: '12px' }}>
+                    No blocks generated by this algorithm.
+                  </div>
+                ) : (
+                  baBlocks.map((blk) => {
+                    const taskDurSum = blk.tasks.reduce((sum, t) => sum + t.duration, 0);
+                    const savedInBlock = Math.max(0, taskDurSum - blk.block_duration);
+                    return (
+                      <div
+                        key={blk.block_id}
+                        style={{
+                          border: '1px solid var(--c-border-light)',
+                          borderRadius: '4px',
+                          padding: '10px 12px',
+                          background: 'var(--c-surface-alt)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span className="cell-mono" style={{ fontWeight: '700', color: 'var(--c-text-primary)' }}>
+                            {blk.block_id} ({blk.track || 'Track 1'})
+                          </span>
+                          <span className="cell-mono" style={{ fontSize: '11px', fontWeight: '600', color: '#1D4ED8' }}>
+                            {blk.start_time} – {blk.end_time} ({blk.block_duration}h possession)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                          {blk.departments.map((dept) => (
+                            <DeptBadge key={dept} department={dept} />
+                          ))}
+                        </div>
+
+                        <div style={{ fontSize: '11px', color: 'var(--c-text-primary)', marginBottom: '4px' }}>
+                          <strong>Clubbed Tasks ({blk.tasks.length}):</strong>{' '}
+                          {blk.tasks.map((t) => `${t.task_id} (${t.duration}h)`).join(', ')}
+                        </div>
+
+                        {blk.tasks.length > 1 && (
+                          <div style={{ fontSize: '10.5px', color: '#166534', background: '#F0FDF4', padding: '3px 6px', borderRadius: '2px', border: '1px solid #BBF7D0' }}>
+                            ✓ Concurrent execution saved {savedInBlock.toFixed(2)}h of separate track possession!
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION F: Schedule Inspection & Track Occupancy */}
       <div className="ops-panel">
         <div className="panel-header">
-          <div className="panel-title">Section E: Schedule Inspection & Track Possession Timeline</div>
+          <div className="panel-title">Section F: Schedule Inspection & Track Possession Timeline</div>
 
           {/* Algorithm Selector Tabs */}
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -1179,10 +1507,10 @@ export default function ComparisonPage({
         </div>
       </div>
 
-      {/* SECTION F: Algorithmic Foundations Panel */}
+      {/* SECTION G: Algorithmic Foundations Panel */}
       <div className="ops-panel">
         <div className="panel-header">
-          <div className="panel-title">Section F: Algorithmic Foundations & Theoretical Principles</div>
+          <div className="panel-title">Section G: Algorithmic Foundations & Theoretical Principles</div>
           <span style={{ fontSize: '11px', color: 'var(--c-text-secondary)' }}>
             DSA FOUNDATIONS · TIME & SPACE COMPLEXITY
           </span>

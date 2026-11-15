@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard';
-import TrainsPage from './components/TrainsPage';
+import OperationsCenter from './components/OperationsCenter';
 import MaintenancePage from './components/MaintenancePage';
 import OptimizerPage from './components/OptimizerPage';
 import BlocksPage from './components/BlocksPage';
 import ComparisonPage from './components/ComparisonPage';
+import ReportsPage from './components/ReportsPage';
+import Dashboard from './components/Dashboard';
+import TrainsPage from './components/TrainsPage';
 
 import {
   DEFAULT_TASKS,
@@ -16,7 +18,7 @@ import {
 } from './services/localData';
 
 export default function App() {
-  const [activePage, setActivePage] = useState('comparison');
+  const [activePage, setActivePage] = useState('operations');
   const [tasks, setTasks] = useState(DEFAULT_TASKS);
   const [trains, setTrains] = useState(DEFAULT_TRAINS);
   const [availableBlocks, setAvailableBlocks] = useState(DEFAULT_AVAILABLE_BLOCKS);
@@ -24,7 +26,7 @@ export default function App() {
     runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
   );
   const [comparisonData, setComparisonData] = useState(() =>
-    runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'contested')
+    runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'showcase')
   );
   const [loading, setLoading] = useState(false);
   const [comparisonLoading, setComparisonLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function App() {
           fetch('/api/trains'),
           fetch('/api/available-blocks'),
           fetch('/api/schedule', { method: 'POST' }),
-          fetch('/api/compare-algorithms?scenario=contested', { method: 'POST' }),
+          fetch('/api/compare-algorithms?scenario=showcase', { method: 'POST' }),
         ]);
 
         if (tasksRes.ok && trainsRes.ok && blocksRes.ok && schedRes.ok) {
@@ -58,7 +60,7 @@ export default function App() {
             const compData = await compRes.json();
             setComparisonData(compData);
           } else {
-            setComparisonData(runLocalComparison(tasksData, trainsData, blocksData, 'contested'));
+            setComparisonData(runLocalComparison(tasksData, trainsData, blocksData, 'showcase'));
           }
         } else {
           // Running on static hosting (Netlify) without Python server
@@ -69,7 +71,7 @@ export default function App() {
             runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
           );
           setComparisonData(
-            runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'contested')
+            runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'showcase')
           );
         }
       } catch {
@@ -81,7 +83,7 @@ export default function App() {
           runLocalGreedyScheduler(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS)
         );
         setComparisonData(
-          runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'contested')
+          runLocalComparison(DEFAULT_TASKS, DEFAULT_TRAINS, DEFAULT_AVAILABLE_BLOCKS, 'showcase')
         );
       } finally {
         setLoading(false);
@@ -151,7 +153,7 @@ export default function App() {
   };
 
   // Run Algorithm Comparison (Snapshot isolation - does not overwrite active scheduleResult)
-  const handleRunComparison = async (scenario = 'contested') => {
+  const handleRunComparison = async (scenario = 'showcase') => {
     try {
       setComparisonLoading(true);
       setError(null);
@@ -190,6 +192,17 @@ export default function App() {
         )}
 
         <main className="page-container">
+          {activePage === 'operations' && (
+            <OperationsCenter
+              trains={trains}
+              tasks={tasks}
+              scheduledBlocks={scheduleResult?.blocks || []}
+              metrics={scheduleResult?.metrics}
+              onGeneratePlan={handleGeneratePlan}
+              onNavigate={setActivePage}
+            />
+          )}
+
           {activePage === 'dashboard' && (
             <Dashboard
               trains={trains}
@@ -235,6 +248,14 @@ export default function App() {
               onRunComparison={handleRunComparison}
               loading={comparisonLoading}
               trains={trains}
+            />
+          )}
+
+          {activePage === 'reports' && (
+            <ReportsPage
+              tasks={tasks}
+              trains={trains}
+              scheduleResult={scheduleResult}
             />
           )}
         </main>
