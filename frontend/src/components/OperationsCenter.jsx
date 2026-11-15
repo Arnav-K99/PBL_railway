@@ -16,376 +16,213 @@ function minToTime(mins) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-// Helper: Format seconds for digital clock "HH:MM:SS"
-function formatDigitalClock(mins, tickSec = 0) {
-  const h = Math.floor(mins / 60) % 24;
-  const m = Math.floor(mins % 60);
-  const s = Math.floor(tickSec % 60);
+// Helper: Format continuous seconds for digital clock "HH:MM:SS"
+function formatDigitalClock(simMins) {
+  const totalSecs = Math.floor(simMins * 60);
+  const h = Math.floor(totalSecs / 3600) % 24;
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = Math.floor(totalSecs % 60);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 // ---------------------------------------------------------------------------
-// SVG SUBCOMPONENTS: DETAILED REALISTIC RAILWAY SIMULATION MODELS
+// COMPACT ANIMATED SVG SUBCOMPONENTS (Miniature Railway Models)
 // ---------------------------------------------------------------------------
 
 /**
- * SignalPost: Realistic color-light railway signal with protective hoods
+ * Compact Signal Post with animated LED aspect glow
  */
-function SignalPost({ x, y, aspect = 'GREEN', signalId = 'S-1', orientation = 'EAST' }) {
-  // aspect: 'GREEN' | 'YELLOW' | 'RED'
+function CompactSignal({ x, y, aspect = 'GREEN', signalId = 'S-1' }) {
   const isRed = aspect === 'RED';
   const isYellow = aspect === 'YELLOW';
   const isGreen = aspect === 'GREEN';
 
-  // Offset post relative to orientation
   const mastX = x;
-  const mastY = y - 36;
+  const mastY = y - 18;
 
   return (
-    <g className="railway-signal" title={`Signal ${signalId}: ${aspect}`}>
-      {/* Ground Foundation & Baseplate */}
-      <rect x={mastX - 4} y={y - 2} width="8" height="4" fill="#1E293B" stroke="#0F172A" strokeWidth="0.5" />
-      {/* Steel Signal Post */}
-      <line x1={mastX} y1={y - 2} x2={mastX} y2={mastY} stroke="#334155" strokeWidth="3" />
-      <line x1={mastX - 1} y1={y - 2} x2={mastX - 1} y2={mastY} stroke="#64748B" strokeWidth="0.8" />
+    <g className="compact-signal" title={`Signal ${signalId}: ${aspect}`}>
+      {/* Post */}
+      <line x1={mastX} y1={y + 4} x2={mastX} y2={mastY} stroke="#334155" strokeWidth="2" />
+      {/* Housing */}
+      <rect x={mastX - 4} y={mastY - 14} width="8" height="15" rx="1.5" fill="#0F172A" stroke="#1E293B" strokeWidth="0.6" />
       
-      {/* Signal Head Housing with Hood Shield */}
-      <rect x={mastX - 7} y={mastY - 26} width="14" height="26" rx="3" fill="#0F172A" stroke="#1E293B" strokeWidth="1" />
-      
-      {/* Aspect 1: RED (Top) */}
-      <circle cx={mastX} cy={mastY - 20} r="3.2" fill={isRed ? '#EF4444' : '#450A0A'} />
+      {/* RED */}
+      <circle cx={mastX} cy={mastY - 10.5} r="1.8" fill={isRed ? '#EF4444' : '#450A0A'} />
       {isRed && (
-        <circle cx={mastX} cy={mastY - 20} r="6" fill="url(#signal-red-glow)" opacity="0.85" />
+        <circle cx={mastX} cy={mastY - 10.5} r="3.5" fill="#EF4444" opacity="0.8" className="anim-signal-pulse" />
       )}
-      <path d={`M ${mastX - 4} ${mastY - 21} Q ${mastX} ${mastY - 24} ${mastX + 4} ${mastY - 21}`} stroke="#0F172A" strokeWidth="1" fill="none" />
 
-      {/* Aspect 2: YELLOW (Middle) */}
-      <circle cx={mastX} cy={mastY - 13} r="3.2" fill={isYellow ? '#F59E0B' : '#451A03'} />
+      {/* YELLOW */}
+      <circle cx={mastX} cy={mastY - 6.5} r="1.8" fill={isYellow ? '#F59E0B' : '#451A03'} />
       {isYellow && (
-        <circle cx={mastX} cy={mastY - 13} r="6" fill="url(#signal-yellow-glow)" opacity="0.85" />
+        <circle cx={mastX} cy={mastY - 6.5} r="3.5" fill="#F59E0B" opacity="0.8" className="anim-signal-pulse" />
       )}
-      <path d={`M ${mastX - 4} ${mastY - 14} Q ${mastX} ${mastY - 17} ${mastX + 4} ${mastY - 14}`} stroke="#0F172A" strokeWidth="1" fill="none" />
 
-      {/* Aspect 3: GREEN (Bottom) */}
-      <circle cx={mastX} cy={mastY - 6} r="3.2" fill={isGreen ? '#22C55E' : '#052E16'} />
+      {/* GREEN */}
+      <circle cx={mastX} cy={mastY - 2.5} r="1.8" fill={isGreen ? '#22C55E' : '#052E16'} />
       {isGreen && (
-        <circle cx={mastX} cy={mastY - 6} r="6" fill="url(#signal-green-glow)" opacity="0.85" />
+        <circle cx={mastX} cy={mastY - 2.5} r="3.5" fill="#22C55E" opacity="0.8" className="anim-signal-pulse" />
       )}
-      <path d={`M ${mastX - 4} ${mastY - 7} Q ${mastX} ${mastY - 10} ${mastX + 4} ${mastY - 7}`} stroke="#0F172A" strokeWidth="1" fill="none" />
-
-      {/* Identification Plate */}
-      <rect x={mastX - 6} y={mastY + 2} width="12" height="6" fill="#FFFFFF" stroke="#0F172A" strokeWidth="0.5" />
-      <text x={mastX} y={mastY + 6.5} fontSize="4.5" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="monospace">
-        {signalId}
-      </text>
     </g>
   );
 }
 
 /**
- * PassengerTrain: High-fidelity model with WAP-7 style Locomotive + 2 LHB Coaches
+ * Compact Miniature Passenger Trainset (~108px total length)
+ * Locomotive + 2 LHB Coaches with rotating wheel indicators & illuminated headlight
  */
-function PassengerTrain({ train, x, y, direction = 'EAST', isSelected = false, onClick }) {
+function CompactPassengerTrain({ train, x, y, direction = 'EAST', isSelected = false, isMoving = false, onClick }) {
   const isEast = direction === 'EAST';
   const name = train.train_name || '';
 
-  // Determine Livery
-  let locoColor = '#1E3A8A'; // Navy Blue default
+  // Livery
+  let locoColor = '#1E40AF'; // Navy Blue default
   let locoStripe = '#F59E0B'; // Gold
-  let coachColor = '#B91C1C'; // Rajdhani Crimson Red
-  let coachStripe = '#F1F5F9'; // Silver/White
+  let coachColor = '#B91C1C'; // Rajdhani Crimson
+  let coachStripe = '#F1F5F9';
 
   if (name.includes('Vande Bharat')) {
-    locoColor = '#F8FAFC'; // Pearl White
-    locoStripe = '#1D4ED8'; // Royal Blue
+    locoColor = '#F8FAFC';
+    locoStripe = '#1D4ED8';
     coachColor = '#F8FAFC';
     coachStripe = '#1D4ED8';
   } else if (name.includes('Rajdhani')) {
-    locoColor = '#DC2626'; // Vibrant Red
-    locoStripe = '#FDE047'; // Yellow
+    locoColor = '#DC2626';
+    locoStripe = '#FDE047';
     coachColor = '#991B1B';
     coachStripe = '#E2E8F0';
   } else if (name.includes('Shatabdi')) {
-    locoColor = '#1E40AF';
+    locoColor = '#1E3A8A';
     locoStripe = '#FBBF24';
-    coachColor = '#1E3A8A';
+    coachColor = '#1E40AF';
     coachStripe = '#FCD34D';
   }
 
-  // Train Geometry Constants (Train length ~ 285px)
-  // Locomotive: 95px, Gangway: 5px, Coach 1: 85px, Gangway: 5px, Coach 2: 85px
-  // In EAST direction: Loco is at front (right, [x - 95, x]), Coach 1 [x - 185, x - 100], Coach 2 [x - 275, x - 190]
-  // In WEST direction: Loco is at front (left, [x, x + 95]), Coach 1 [x + 100, x + 185], Coach 2 [x + 190, x + 275]
-
+  // Length: Loco 38px, Coupler 3px, Coach 1 32px, Coupler 3px, Coach 2 32px => 108px
   return (
     <g
-      className={`train-group ${isSelected ? 'train-selected' : ''}`}
+      className="compact-train-group"
       onClick={onClick}
-      style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+      style={{ cursor: 'pointer', transition: 'filter 0.2s ease' }}
+      filter={isSelected ? 'drop-shadow(0 0 5px rgba(245,158,11,0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))'}
     >
-      {/* Selection Halo / Bounding Highlight */}
-      {isSelected && (
-        <rect
-          x={isEast ? x - 285 : x - 10}
-          y={y - 50}
-          width="295"
-          height="62"
-          rx="6"
-          fill="none"
-          stroke="#F59E0B"
-          strokeWidth="1.8"
-          strokeDasharray="6 3"
-        />
-      )}
-
-      {/* Headlight Illuminated Beam projecting on track */}
+      {/* Headlight Illuminated Beam */}
       {isEast ? (
         <polygon
-          points={`${x},${y - 14} ${x + 110},${y - 28} ${x + 110},${y + 16} ${x},${y - 8}`}
+          points={`${x},${y - 5} ${x + 55},${y - 12} ${x + 55},${y + 8} ${x},${y - 1}`}
           fill="url(#headlight-beam-east)"
-          opacity="0.65"
+          opacity="0.55"
           style={{ pointerEvents: 'none' }}
         />
       ) : (
         <polygon
-          points={`${x},${y - 14} ${x - 110},${y - 28} ${x - 110},${y + 16} ${x},${y - 8}`}
+          points={`${x},${y - 5} ${x - 55},${y - 12} ${x - 55},${y + 8} ${x},${y - 1}`}
           fill="url(#headlight-beam-west)"
-          opacity="0.65"
+          opacity="0.55"
           style={{ pointerEvents: 'none' }}
         />
       )}
 
-      {/* --- A. LOCOMOTIVE (WAP-7 Modern Indian Mainline Electric) --- */}
-      <g className="locomotive" transform={isEast ? `translate(${x - 95}, ${y})` : `translate(${x}, ${y})`}>
-        {/* Cowcatcher (Pilot) with Hazard Stripes */}
-        {isEast ? (
-          <polygon points="90,4 98,6 98,8 88,8" fill="#1E293B" stroke="#0F172A" strokeWidth="0.5" />
-        ) : (
-          <polygon points="5,4 -3,6 -3,8 7,8" fill="#1E293B" stroke="#0F172A" strokeWidth="0.5" />
-        )}
+      {/* --- A. MINIATURE LOCOMOTIVE --- */}
+      <g transform={isEast ? `translate(${x - 38}, ${y})` : `translate(${x}, ${y})`}>
+        {/* Wheels on Rails */}
+        <circle cx="8" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="15" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="23" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="30" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
 
-        {/* Co-Co Bogies (2 Truck Bogies with 6 Steel Wheels) */}
-        {/* Rear Bogie */}
-        <rect x="8" y="2" width="32" height="4" fill="#1E293B" rx="1" />
-        <circle cx="12" cy="7" r="4.5" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="12" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="24" cy="7" r="4.5" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="24" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="36" cy="7" r="4.5" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="36" cy="7" r="1.5" fill="#0F172A" />
-
-        {/* Front Bogie */}
-        <rect x="55" y="2" width="32" height="4" fill="#1E293B" rx="1" />
-        <circle cx="59" cy="7" r="4.5" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="59" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="71" cy="7" r="4.5" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="71" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="83" cy="7" r="4.5" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="83" cy="7" r="1.5" fill="#0F172A" />
-
-        {/* Locomotive Main Body (Aerodynamic Streamlined Cab) */}
+        {/* Locomotive Aerodynamic Body */}
         {isEast ? (
           <path
-            d="M 2,-2 L 78,-2 Q 92,-4 95,-14 L 92,-28 Q 86,-33 76,-33 L 4,-33 Q 2,-33 2,-30 Z"
+            d="M 1,-1 L 31,-1 Q 37,-2 38,-7 L 37,-12 Q 34,-14 30,-14 L 2,-14 Q 1,-14 1,-13 Z"
             fill={locoColor}
             stroke="#0F172A"
-            strokeWidth="1"
+            strokeWidth="0.8"
           />
         ) : (
           <path
-            d="M 93,-2 L 17,-2 Q 3,-4 0,-14 L 3,-28 Q 9,-33 19,-33 L 91,-33 Q 93,-33 93,-30 Z"
+            d="M 37,-1 L 7,-1 Q 1,-2 0,-7 L 1,-12 Q 4,-14 8,-14 L 36,-14 Q 37,-14 37,-13 Z"
             fill={locoColor}
             stroke="#0F172A"
-            strokeWidth="1"
+            strokeWidth="0.8"
           />
         )}
 
-        {/* Livery Waist Stripe & Accent Chevrons */}
+        {/* Livery Accent Stripe */}
         {isEast ? (
-          <>
-            <path d="M 2,-16 L 82,-16 Q 90,-16 93,-19 L 91,-22 L 2,-22 Z" fill={locoStripe} />
-            <polygon points="78,-16 93,-19 86,-12" fill="#FBBF24" />
-          </>
+          <rect x="1" y="-8" width="34" height="2.5" fill={locoStripe} />
         ) : (
-          <>
-            <path d="M 93,-16 L 13,-16 Q 5,-16 2,-19 L 4,-22 L 93,-22 Z" fill={locoStripe} />
-            <polygon points="17,-16 2,-19 9,-12" fill="#FBBF24" />
-          </>
+          <rect x="3" y="-8" width="34" height="2.5" fill={locoStripe} />
         )}
 
-        {/* Cab Windshield Glass with Blue Tint & Glare */}
+        {/* Windshield */}
         {isEast ? (
-          <polygon points="80,-21 91,-21 86,-30 76,-30" fill="#0284C7" stroke="#0F172A" strokeWidth="0.6" />
+          <polygon points="31,-9 36,-9 34,-13 30,-13" fill="#38BDF8" stroke="#0F172A" strokeWidth="0.4" />
         ) : (
-          <polygon points="15,-21 4,-21 9,-30 19,-30" fill="#0284C7" stroke="#0F172A" strokeWidth="0.6" />
-        )}
-        {/* Driver Silhouette in Cab */}
-        <circle cx={isEast ? 82 : 13} cy="-25" r="2.2" fill="#0F172A" opacity="0.75" />
-
-        {/* Cab Side Windows */}
-        <rect x={isEast ? 58 : 28} y="-29" width="12" height="7" rx="1" fill="#0284C7" stroke="#0F172A" strokeWidth="0.5" />
-
-        {/* Cooling Ventilation Grilles */}
-        <rect x={isEast ? 12 : 46} y="-28" width="36" height="8" rx="1" fill="#334155" stroke="#1E293B" strokeWidth="0.5" />
-        <line x1={isEast ? 16 : 50} y1="-28" x2={isEast ? 16 : 50} y2="-20" stroke="#64748B" strokeWidth="1" />
-        <line x1={isEast ? 22 : 56} y1="-28" x2={isEast ? 22 : 56} y2="-20" stroke="#64748B" strokeWidth="1" />
-        <line x1={isEast ? 28 : 62} y1="-28" x2={isEast ? 28 : 62} y2="-20" stroke="#64748B" strokeWidth="1" />
-        <line x1={isEast ? 34 : 68} y1="-28" x2={isEast ? 34 : 68} y2="-20" stroke="#64748B" strokeWidth="1" />
-        <line x1={isEast ? 40 : 74} y1="-28" x2={isEast ? 40 : 74} y2="-20" stroke="#64748B" strokeWidth="1" />
-
-        {/* Headlight Cluster (Twin Bright LED Lamps) */}
-        {isEast ? (
-          <g>
-            <circle cx="94" cy="-14" r="3.5" fill="#FFFFFF" stroke="#0F172A" strokeWidth="0.8" />
-            <circle cx="94" cy="-14" r="2" fill="#FEF08A" />
-            <circle cx="94" cy="-14" r="5.5" fill="url(#headlight-glow)" opacity="0.9" />
-          </g>
-        ) : (
-          <g>
-            <circle cx="1" cy="-14" r="3.5" fill="#FFFFFF" stroke="#0F172A" strokeWidth="0.8" />
-            <circle cx="1" cy="-14" r="2" fill="#FEF08A" />
-            <circle cx="1" cy="-14" r="5.5" fill="url(#headlight-glow)" opacity="0.9" />
-          </g>
+          <polygon points="7,-9 2,-9 4,-13 8,-13" fill="#38BDF8" stroke="#0F172A" strokeWidth="0.4" />
         )}
 
-        {/* High-Performance Roof Pantograph (Single-Arm Diamond) */}
-        <g className="pantograph" stroke="#64748B" strokeWidth="1.2" fill="none">
-          {/* Base Insulators */}
-          <rect x={isEast ? 26 : 52} y="-35" width="16" height="2" fill="#0F172A" stroke="none" />
-          {/* Articulated Lower & Upper Arms */}
-          <line x1={isEast ? 30 : 64} y1="-35" x2={isEast ? 42 : 52} y2="-44" />
-          <line x1={isEast ? 42 : 52} y1="-44" x2={isEast ? 32 : 62} y2="-52" />
-          {/* Carbon Contact Shoe touching catenary */}
-          <line x1={isEast ? 24 : 54} y1="-52" x2={isEast ? 40 : 70} y2="-52" stroke="#E2E8F0" strokeWidth="2" />
-          {/* Contact Spark Glow */}
-          <circle cx={isEast ? 32 : 62} cy="-52" r="2" fill="#67E8F9" opacity="0.75" />
-        </g>
+        {/* Headlight Lamp */}
+        <circle cx={isEast ? 37.5 : 0.5} cy="-6" r="1.5" fill="#FEF08A" stroke="#0F172A" strokeWidth="0.4" />
+        <circle cx={isEast ? 37.5 : 0.5} cy="-6" r="2.8" fill="url(#headlight-glow)" opacity="0.85" />
+
+        {/* Miniature Pantograph */}
+        <line x1={isEast ? 12 : 24} y1="-14" x2={isEast ? 16 : 20} y2="-19" stroke="#64748B" strokeWidth="0.7" />
+        <line x1={isEast ? 16 : 20} y1="-19" x2={isEast ? 13 : 23} y2="-22" stroke="#64748B" strokeWidth="0.7" />
+        <line x1={isEast ? 9 : 19} y1="-22" x2={isEast ? 17 : 27} y2="-22" stroke="#E2E8F0" strokeWidth="1" />
       </g>
 
-      {/* --- B. COUPLER & GANGWAY (Loco to Coach 1) --- */}
-      <rect
-        x={isEast ? x - 100 : x + 95}
-        y={y - 26}
-        width="5"
-        height="22"
-        rx="1"
-        fill="#1E293B"
-        stroke="#0F172A"
-        strokeWidth="0.8"
-      />
+      {/* Coupler 1 */}
+      <rect x={isEast ? x - 41 : x + 38} y={y - 10} width="3" height="8" fill="#1E293B" rx="0.5" />
 
-      {/* --- C. COACH 1 (LHB Stainless Steel Passenger Coach) --- */}
-      <g className="coach-1" transform={isEast ? `translate(${x - 185}, ${y})` : `translate(${x + 100}, ${y})`}>
-        {/* Bogie 1 */}
-        <rect x="6" y="2" width="22" height="4" fill="#1E293B" rx="1" />
-        <circle cx="10" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="10" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="24" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="24" cy="7" r="1.5" fill="#0F172A" />
-
-        {/* Bogie 2 */}
-        <rect x="56" y="2" width="22" height="4" fill="#1E293B" rx="1" />
-        <circle cx="60" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="60" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="74" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="74" cy="7" r="1.5" fill="#0F172A" />
+      {/* --- B. COACH 1 --- */}
+      <g transform={isEast ? `translate(${x - 73}, ${y})` : `translate(${x + 41}, ${y})`}>
+        {/* Wheels */}
+        <circle cx="5" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="11" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="21" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="27" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
 
         {/* Coach Body */}
-        <rect x="0" y="-31" width="84" height="30" rx="3" fill={coachColor} stroke="#0F172A" strokeWidth="1" />
-        {/* Stainless Steel Ribbing & Window Band */}
-        <rect x="0" y="-24" width="84" height="15" fill={coachStripe} opacity="0.92" />
-        <line x1="0" y1="-8" x2="84" y2="-8" stroke="#475569" strokeWidth="0.6" />
-        <line x1="0" y1="-5" x2="84" y2="-5" stroke="#475569" strokeWidth="0.6" />
-
-        {/* 5 Panoramic Tinted Passenger Windows with Warm Interior Glow */}
-        {[8, 22, 36, 50, 64].map((wx, idx) => (
-          <g key={idx}>
-            <rect x={wx} y="-22" width="10" height="9" rx="1" fill="#FEF08A" stroke="#0F172A" strokeWidth="0.6" />
-            {/* Passenger Silhouette */}
-            <circle cx={wx + 5} cy="-17" r="2" fill="#475569" opacity="0.65" />
-          </g>
-        ))}
-
-        {/* End Vestibule Entrance Door */}
-        <rect x="76" y="-28" width="6" height="24" fill="#334155" stroke="#0F172A" strokeWidth="0.5" />
-        <rect x="2" y="-28" width="6" height="24" fill="#334155" stroke="#0F172A" strokeWidth="0.5" />
-        {/* Roof AC Unit Pod */}
-        <rect x="24" y="-34" width="36" height="3" rx="1" fill="#475569" stroke="#1E293B" strokeWidth="0.5" />
-      </g>
-
-      {/* --- D. COUPLER & GANGWAY (Coach 1 to Coach 2) --- */}
-      <rect
-        x={isEast ? x - 190 : x + 185}
-        y={y - 26}
-        width="5"
-        height="22"
-        rx="1"
-        fill="#1E293B"
-        stroke="#0F172A"
-        strokeWidth="0.8"
-      />
-
-      {/* --- E. COACH 2 (Trailing Passenger Coach) --- */}
-      <g className="coach-2" transform={isEast ? `translate(${x - 275}, ${y})` : `translate(${x + 190}, ${y})`}>
-        {/* Bogie 1 */}
-        <rect x="6" y="2" width="22" height="4" fill="#1E293B" rx="1" />
-        <circle cx="10" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="10" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="24" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="24" cy="7" r="1.5" fill="#0F172A" />
-
-        {/* Bogie 2 */}
-        <rect x="56" y="2" width="22" height="4" fill="#1E293B" rx="1" />
-        <circle cx="60" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="60" cy="7" r="1.5" fill="#0F172A" />
-        <circle cx="74" cy="7" r="4.2" fill="#334155" stroke="#94A3B8" strokeWidth="1" />
-        <circle cx="74" cy="7" r="1.5" fill="#0F172A" />
-
-        {/* Coach Body */}
-        <rect x="0" y="-31" width="84" height="30" rx="3" fill={coachColor} stroke="#0F172A" strokeWidth="1" />
-        <rect x="0" y="-24" width="84" height="15" fill={coachStripe} opacity="0.92" />
-        <line x1="0" y1="-8" x2="84" y2="-8" stroke="#475569" strokeWidth="0.6" />
-        <line x1="0" y1="-5" x2="84" y2="-5" stroke="#475569" strokeWidth="0.6" />
+        <rect x="0" y="-13" width="32" height="12.5" rx="1" fill={coachColor} stroke="#0F172A" strokeWidth="0.8" />
+        <rect x="0" y="-10" width="32" height="6.5" fill={coachStripe} opacity="0.9" />
 
         {/* Windows */}
-        {[8, 22, 36, 50, 64].map((wx, idx) => (
-          <g key={idx}>
-            <rect x={wx} y="-22" width="10" height="9" rx="1" fill="#FEF08A" stroke="#0F172A" strokeWidth="0.6" />
-            <circle cx={wx + 5} cy="-17" r="2" fill="#475569" opacity="0.65" />
-          </g>
+        {[3, 10, 17, 24].map((wx) => (
+          <rect key={wx} x={wx} y="-9" width="4.5" height="4" rx="0.5" fill="#FEF08A" stroke="#0F172A" strokeWidth="0.3" />
         ))}
-
-        {/* End Tail Lamp (Flashing Red LED marker at rear of train) */}
-        {isEast ? (
-          <circle cx="2" cy="-18" r="2.8" fill="#EF4444" stroke="#7F1D1D" strokeWidth="0.5" />
-        ) : (
-          <circle cx="82" cy="-18" r="2.8" fill="#EF4444" stroke="#7F1D1D" strokeWidth="0.5" />
-        )}
       </g>
 
-      {/* --- F. FLOATING HUD IDENTIFIER BADGE --- */}
-      <g transform={isEast ? `translate(${x - 47}, ${y - 48})` : `translate(${x + 47}, ${y - 48})`}>
-        <rect
-          x="-50"
-          y="-12"
-          width="100"
-          height="16"
-          rx="3"
-          fill="#FFFFFF"
-          stroke={isSelected ? '#F59E0B' : '#0284C7'}
-          strokeWidth="1.2"
-          filter="drop-shadow(0 1px 3px rgba(0,0,0,0.15))"
-        />
-        <text
-          x="0"
-          y="-1"
-          fontSize="8.5"
-          fontWeight="700"
-          textAnchor="middle"
-          fill="#0F172A"
-          fontFamily="monospace"
-        >
-          {isEast ? '🚆→' : '←🚆'} {train.train_id}
+      {/* Coupler 2 */}
+      <rect x={isEast ? x - 76 : x + 73} y={y - 10} width="3" height="8" fill="#1E293B" rx="0.5" />
+
+      {/* --- C. COACH 2 --- */}
+      <g transform={isEast ? `translate(${x - 108}, ${y})` : `translate(${x + 76}, ${y})`}>
+        {/* Wheels */}
+        <circle cx="5" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="11" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="21" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="27" cy="4" r="2.2" fill="#1E293B" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+
+        {/* Coach Body */}
+        <rect x="0" y="-13" width="32" height="12.5" rx="1" fill={coachColor} stroke="#0F172A" strokeWidth="0.8" />
+        <rect x="0" y="-10" width="32" height="6.5" fill={coachStripe} opacity="0.9" />
+
+        {/* Windows */}
+        {[3, 10, 17, 24].map((wx) => (
+          <rect key={wx} x={wx} y="-9" width="4.5" height="4" rx="0.5" fill="#FEF08A" stroke="#0F172A" strokeWidth="0.3" />
+        ))}
+
+        {/* Red Rear Tail Lamp */}
+        <circle cx={isEast ? 1 : 31} cy="-7" r="1.2" fill="#EF4444" />
+      </g>
+
+      {/* --- D. COMPACT FLOATING PILL BADGE --- */}
+      <g transform={isEast ? `translate(${x - 18}, ${y - 20})` : `translate(${x + 18}, ${y - 20})`}>
+        <rect x="-24" y="-7" width="48" height="11" rx="2" fill="#FFFFFF" stroke={isSelected ? '#F59E0B' : '#0284C7'} strokeWidth="1" />
+        <text x="0" y="1" fontSize="6.5" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="monospace">
+          {isEast ? '🚆→' : '←🚆'} {train.train_id.replace('TR-', '')}
         </text>
       </g>
     </g>
@@ -393,208 +230,117 @@ function PassengerTrain({ train, x, y, direction = 'EAST', isSelected = false, o
 }
 
 /**
- * FreightTrain: Heavy WAG-9 Freight Locomotive + BOXN Coal Hopper + Intermodal Container Flat
+ * Compact Miniature Freight Trainset (~112px total length)
+ * WAG-9 Freight Locomotive + BOXN Coal Hopper + BLC Container Flat
  */
-function FreightTrain({ train, x, y, direction = 'EAST', isSelected = false, onClick }) {
+function CompactFreightTrain({ train, x, y, direction = 'EAST', isSelected = false, isMoving = false, onClick }) {
   const isEast = direction === 'EAST';
 
   return (
     <g
-      className={`train-group ${isSelected ? 'train-selected' : ''}`}
+      className="compact-train-group"
       onClick={onClick}
-      style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+      style={{ cursor: 'pointer', transition: 'filter 0.2s ease' }}
+      filter={isSelected ? 'drop-shadow(0 0 5px rgba(245,158,11,0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))'}
     >
-      {/* Selection Halo */}
-      {isSelected && (
-        <rect
-          x={isEast ? x - 285 : x - 10}
-          y={y - 50}
-          width="295"
-          height="62"
-          rx="6"
-          fill="none"
-          stroke="#F59E0B"
-          strokeWidth="1.8"
-          strokeDasharray="6 3"
-        />
-      )}
-
       {/* Headlight Beam */}
       {isEast ? (
         <polygon
-          points={`${x},${y - 14} ${x + 110},${y - 28} ${x + 110},${y + 16} ${x},${y - 8}`}
+          points={`${x},${y - 5} ${x + 55},${y - 12} ${x + 55},${y + 8} ${x},${y - 1}`}
           fill="url(#headlight-beam-east)"
-          opacity="0.65"
+          opacity="0.55"
           style={{ pointerEvents: 'none' }}
         />
       ) : (
         <polygon
-          points={`${x},${y - 14} ${x - 110},${y - 28} ${x - 110},${y + 16} ${x},${y - 8}`}
+          points={`${x},${y - 5} ${x - 55},${y - 12} ${x - 55},${y + 8} ${x},${y - 1}`}
           fill="url(#headlight-beam-west)"
-          opacity="0.65"
+          opacity="0.55"
           style={{ pointerEvents: 'none' }}
         />
       )}
 
-      {/* --- A. FREIGHT LOCOMOTIVE (Heavy WAG-9 Box Body in Emerald Green) --- */}
-      <g className="freight-loco" transform={isEast ? `translate(${x - 95}, ${y})` : `translate(${x}, ${y})`}>
-        {/* Cowcatcher */}
+      {/* --- A. FREIGHT LOCOMOTIVE (Emerald Green WAG-9) --- */}
+      <g transform={isEast ? `translate(${x - 38}, ${y})` : `translate(${x}, ${y})`}>
+        {/* Wheels */}
+        <circle cx="8" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="15" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="23" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="30" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+
+        {/* Heavy Body */}
         {isEast ? (
-          <polygon points="90,4 98,6 98,8 88,8" fill="#1E293B" stroke="#0F172A" strokeWidth="0.5" />
+          <path d="M 1,-1 L 35,-1 L 38,-5 L 38,-12 L 35,-14 L 1,-14 Z" fill="#065F46" stroke="#0F172A" strokeWidth="0.8" />
         ) : (
-          <polygon points="5,4 -3,6 -3,8 7,8" fill="#1E293B" stroke="#0F172A" strokeWidth="0.5" />
+          <path d="M 37,-1 L 3,-1 L 0,-5 L 0,-12 L 3,-14 L 37,-14 Z" fill="#065F46" stroke="#0F172A" strokeWidth="0.8" />
         )}
+        {/* Yellow Stripe */}
+        <rect x="2" y="-8" width="34" height="2.5" fill="#FBBF24" />
 
-        {/* Heavy CASNUB Freight Bogies */}
-        <rect x="8" y="2" width="32" height="4" fill="#0F172A" rx="1" />
-        <circle cx="12" cy="7" r="4.5" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-        <circle cx="24" cy="7" r="4.5" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-        <circle cx="36" cy="7" r="4.5" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-
-        <rect x="55" y="2" width="32" height="4" fill="#0F172A" rx="1" />
-        <circle cx="59" cy="7" r="4.5" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-        <circle cx="71" cy="7" r="4.5" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-        <circle cx="83" cy="7" r="4.5" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-
-        {/* Heavy Box Locomotive Body */}
+        {/* Windshield */}
         {isEast ? (
-          <path
-            d="M 2,-2 L 86,-2 Q 95,-3 95,-14 L 95,-28 L 86,-33 L 4,-33 L 2,-28 Z"
-            fill="#065F46"
-            stroke="#0F172A"
-            strokeWidth="1.2"
-          />
+          <polygon points="32,-9 36,-9 34,-13 31,-13" fill="#38BDF8" stroke="#0F172A" strokeWidth="0.4" />
         ) : (
-          <path
-            d="M 93,-2 L 9,-2 Q 0,-3 0,-14 L 0,-28 L 9,-33 L 91,-33 L 93,-28 Z"
-            fill="#065F46"
-            stroke="#0F172A"
-            strokeWidth="1.2"
-          />
+          <polygon points="6,-9 2,-9 4,-13 7,-13" fill="#38BDF8" stroke="#0F172A" strokeWidth="0.4" />
         )}
-
-        {/* Yellow Chevron Band */}
-        <rect x="2" y="-18" width="91" height="6" fill="#FBBF24" />
-
-        {/* Heavy Cab Windshield */}
-        {isEast ? (
-          <polygon points="82,-20 93,-20 90,-29 80,-29" fill="#0284C7" stroke="#0F172A" strokeWidth="0.8" />
-        ) : (
-          <polygon points="13,-20 2,-20 5,-29 15,-29" fill="#0284C7" stroke="#0F172A" strokeWidth="0.8" />
-        )}
-
-        {/* Heavy Cooling Louvres */}
-        <rect x={isEast ? 12 : 36} y="-29" width="46" height="9" fill="#0F172A" stroke="#1E293B" strokeWidth="0.5" />
-        {[0, 6, 12, 18, 24, 30, 36, 42].map((lx) => (
-          <line
-            key={lx}
-            x1={(isEast ? 14 : 38) + lx}
-            y1="-29"
-            x2={(isEast ? 14 : 38) + lx}
-            y2="-20"
-            stroke="#34D399"
-            strokeWidth="0.8"
-          />
-        ))}
-
         {/* Headlight */}
-        <circle cx={isEast ? 94 : 1} cy="-14" r="3.5" fill="#FEF08A" stroke="#0F172A" strokeWidth="0.8" />
-        <circle cx={isEast ? 94 : 1} cy="-14" r="5.5" fill="url(#headlight-glow)" opacity="0.9" />
-
-        {/* Twin Heavy Pantographs */}
-        <g stroke="#94A3B8" strokeWidth="1.2" fill="none">
-          <line x1={isEast ? 20 : 70} y1="-33" x2={isEast ? 28 : 62} y2="-48" />
-          <line x1={isEast ? 28 : 62} y1="-48" x2={isEast ? 22 : 68} y2="-52" />
-          <line x1={isEast ? 16 : 60} y1="-52" x2={isEast ? 30 : 74} y2="-52" stroke="#FFFFFF" strokeWidth="2" />
-        </g>
+        <circle cx={isEast ? 37.5 : 0.5} cy="-6" r="1.5" fill="#FEF08A" stroke="#0F172A" strokeWidth="0.4" />
+        <circle cx={isEast ? 37.5 : 0.5} cy="-6" r="2.8" fill="url(#headlight-glow)" opacity="0.85" />
       </g>
 
-      {/* --- B. WAGON 1: BOXN OPEN COAL HOPPER --- */}
-      <g className="wagon-coal" transform={isEast ? `translate(${x - 185}, ${y})` : `translate(${x + 100}, ${y})`}>
-        {/* Bogies */}
-        <rect x="6" y="2" width="22" height="4" fill="#0F172A" />
-        <circle cx="10" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
-        <circle cx="24" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
-        <rect x="56" y="2" width="22" height="4" fill="#0F172A" />
-        <circle cx="60" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
-        <circle cx="74" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
+      {/* Coupler 1 */}
+      <rect x={isEast ? x - 41 : x + 38} y={y - 10} width="3" height="8" fill="#1E293B" rx="0.5" />
 
-        {/* Mounded Heap of Real Coal above rim */}
-        <path
-          d="M 4,-26 Q 20,-36 42,-34 Q 64,-37 80,-26 Z"
-          fill="#0F172A"
-          stroke="#1E293B"
-          strokeWidth="0.8"
-        />
-        <circle cx="28" cy="-31" r="2" fill="#334155" />
-        <circle cx="52" cy="-30" r="2.5" fill="#334155" />
+      {/* --- B. WAGON 1: BOXN COAL HOPPER --- */}
+      <g transform={isEast ? `translate(${x - 75}, ${y})` : `translate(${x + 41}, ${y})`}>
+        {/* Wheels */}
+        <circle cx="5" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="11" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="23" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="29" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
 
-        {/* BOXN Corrugated Hopper Walls */}
-        <rect x="0" y="-26" width="84" height="25" fill="#78350F" stroke="#0F172A" strokeWidth="1" />
-        {[10, 22, 34, 46, 58, 70].map((rx) => (
-          <line key={rx} x1={rx} y1="-26" x2={rx} y2="-1" stroke="#451A03" strokeWidth="1.5" />
+        {/* Coal Heap */}
+        <path d="M 3,-11 Q 17,-16 31,-11 Z" fill="#0F172A" />
+
+        {/* Corrugated Hopper */}
+        <rect x="0" y="-11" width="34" height="11" rx="0.5" fill="#78350F" stroke="#0F172A" strokeWidth="0.8" />
+        {[7, 14, 21, 28].map((lx) => (
+          <line key={lx} x1={lx} y1="-11" x2={lx} y2="0" stroke="#451A03" strokeWidth="1" />
         ))}
-        {/* Stencil */}
-        <text x="42" y="-12" fontSize="5.5" fontWeight="700" textAnchor="middle" fill="#FEF3C7" fontFamily="monospace">
-          BOXN · COAL 88T
-        </text>
       </g>
 
-      {/* --- C. WAGON 2: BLC INTERMODAL CONTAINER FLAT --- */}
-      <g className="wagon-container" transform={isEast ? `translate(${x - 275}, ${y})` : `translate(${x + 190}, ${y})`}>
-        {/* Bogies */}
-        <rect x="6" y="2" width="22" height="4" fill="#0F172A" />
-        <circle cx="10" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
-        <circle cx="24" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
-        <rect x="56" y="2" width="22" height="4" fill="#0F172A" />
-        <circle cx="60" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
-        <circle cx="74" cy="7" r="4.2" fill="#1E293B" stroke="#475569" strokeWidth="1" />
+      {/* Coupler 2 */}
+      <rect x={isEast ? x - 78 : x + 75} y={y - 10} width="3" height="8" fill="#1E293B" rx="0.5" />
 
-        {/* Flatbed Steel Deck */}
-        <rect x="0" y="-5" width="84" height="4" fill="#334155" stroke="#0F172A" strokeWidth="0.8" />
+      {/* --- C. WAGON 2: BLC CONTAINER FLAT --- */}
+      <g transform={isEast ? `translate(${x - 112}, ${y})` : `translate(${x + 78}, ${y})`}>
+        {/* Wheels */}
+        <circle cx="5" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="11" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="23" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
+        <circle cx="29" cy="4" r="2.2" fill="#0F172A" stroke="#64748B" strokeWidth="0.6" className={isMoving ? 'anim-wheel' : ''} />
 
-        {/* Container 1: Marine Blue CONCOR */}
-        <rect x="2" y="-30" width="38" height="25" fill="#1E40AF" stroke="#0F172A" strokeWidth="0.8" />
-        {[6, 12, 18, 24, 30, 36].map((cx) => (
-          <line key={cx} x1={cx} y1="-30" x2={cx} y2="-5" stroke="#1D4ED8" strokeWidth="1" />
-        ))}
-        <text x="21" y="-16" fontSize="5.5" fontWeight="800" textAnchor="middle" fill="#FFFFFF" fontFamily="monospace">
+        {/* Flatbed Deck */}
+        <rect x="0" y="-2" width="34" height="2" fill="#334155" stroke="#0F172A" strokeWidth="0.5" />
+
+        {/* Container A: CONCOR Blue */}
+        <rect x="1" y="-12" width="15" height="10" fill="#1E40AF" stroke="#0F172A" strokeWidth="0.5" />
+        <text x="8.5" y="-6" fontSize="3" fontWeight="800" textAnchor="middle" fill="#FFFFFF" fontFamily="monospace">
           CONCOR
         </text>
 
-        {/* Container 2: Crimson Red INDIAN RAILWAYS */}
-        <rect x="44" y="-30" width="38" height="25" fill="#991B1B" stroke="#0F172A" strokeWidth="0.8" />
-        {[48, 54, 60, 66, 72, 78].map((cx) => (
-          <line key={cx} x1={cx} y1="-30" x2={cx} y2="-5" stroke="#B91C1C" strokeWidth="1" />
-        ))}
-        <text x="63" y="-16" fontSize="5" fontWeight="800" textAnchor="middle" fill="#FEF08A" fontFamily="monospace">
-          INDIAN RLY
+        {/* Container B: IR Red */}
+        <rect x="18" y="-12" width="15" height="10" fill="#991B1B" stroke="#0F172A" strokeWidth="0.5" />
+        <text x="25.5" y="-6" fontSize="3" fontWeight="800" textAnchor="middle" fill="#FEF08A" fontFamily="monospace">
+          IR
         </text>
       </g>
 
-      {/* --- D. FLOATING HUD IDENTIFIER BADGE --- */}
-      <g transform={isEast ? `translate(${x - 47}, ${y - 48})` : `translate(${x + 47}, ${y - 48})`}>
-        <rect
-          x="-55"
-          y="-12"
-          width="110"
-          height="16"
-          rx="3"
-          fill="#FFFFFF"
-          stroke={isSelected ? '#F59E0B' : '#059669'}
-          strokeWidth="1.2"
-          filter="drop-shadow(0 1px 3px rgba(0,0,0,0.15))"
-        />
-        <text
-          x="0"
-          y="-1"
-          fontSize="8"
-          fontWeight="700"
-          textAnchor="middle"
-          fill="#0F172A"
-          fontFamily="monospace"
-        >
-          {isEast ? '🚂→' : '←🚂'} {train.train_id} [FREIGHT]
+      {/* Floating Pill */}
+      <g transform={isEast ? `translate(${x - 18}, ${y - 20})` : `translate(${x + 18}, ${y - 20})`}>
+        <rect x="-26" y="-7" width="52" height="11" rx="2" fill="#FFFFFF" stroke={isSelected ? '#F59E0B' : '#059669'} strokeWidth="1" />
+        <text x="0" y="1" fontSize="6" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="monospace">
+          {isEast ? '🚂→' : '←🚂'} {train.train_id.replace('TR-', '')}
         </text>
       </g>
     </g>
@@ -602,115 +348,94 @@ function FreightTrain({ train, x, y, direction = 'EAST', isSelected = false, onC
 }
 
 /**
- * MaintenanceWorkZone: Authentic track possession work zone with barrier stop boards,
- * yellow track tamper / tower wagon, and safety maintenance personnel
+ * Compact Maintenance Work Zone with animated flashing strobe & barricades
  */
-function MaintenanceWorkZone({ block, trackY, xStart = 380, xEnd = 960, isSelected, onClick }) {
+function CompactMaintenanceZone({ block, trackY, xStart = 280, xEnd = 720, isSelected, onClick }) {
   const midX = (xStart + xEnd) / 2;
   const width = xEnd - xStart;
 
   return (
-    <g className="maintenance-possession-zone" onClick={onClick} style={{ cursor: 'pointer' }}>
-      {/* 1. Track Bed Caution Stripes Overlay */}
+    <g className="compact-work-zone" onClick={onClick} style={{ cursor: 'pointer' }}>
+      {/* 1. Track Bed Caution Hash Overlay */}
       <rect
         x={xStart}
-        y={trackY - 14}
+        y={trackY - 7}
         width={width}
-        height="28"
+        height="14"
         fill="url(#caution-diagonal-stripes)"
-        opacity="0.35"
-        rx="2"
+        opacity="0.3"
+        rx="1"
       />
       <rect
         x={xStart}
-        y={trackY - 14}
+        y={trackY - 7}
         width={width}
-        height="28"
+        height="14"
         fill="none"
         stroke="#DC2626"
-        strokeWidth="1.5"
-        strokeDasharray="8 4"
+        strokeWidth="1"
+        strokeDasharray="4 2"
       />
 
-      {/* 2. Boundary Red & White Striped Barricades */}
-      {/* Left Barricade */}
-      <g transform={`translate(${xStart - 4}, ${trackY - 24})`}>
-        <rect x="0" y="0" width="8" height="32" fill="#DC2626" rx="1" />
-        <line x1="0" y1="8" x2="8" y2="8" stroke="#FFFFFF" strokeWidth="3" />
-        <line x1="0" y1="20" x2="8" y2="20" stroke="#FFFFFF" strokeWidth="3" />
-        <circle cx="4" cy="-4" r="3" fill="#EF4444" />
-        <circle cx="4" cy="-4" r="5" fill="url(#signal-red-glow)" opacity="0.8" />
+      {/* 2. Boundary Red & White Barricades */}
+      <g transform={`translate(${xStart - 2}, ${trackY - 11})`}>
+        <rect x="0" y="0" width="4" height="18" fill="#DC2626" rx="0.5" />
+        <line x1="0" y1="5" x2="4" y2="5" stroke="#FFFFFF" strokeWidth="1.5" />
+        <line x1="0" y1="12" x2="4" y2="12" stroke="#FFFFFF" strokeWidth="1.5" />
+        <circle cx="2" cy="-2" r="1.5" fill="#EF4444" className="anim-signal-pulse" />
       </g>
-      {/* Right Barricade */}
-      <g transform={`translate(${xEnd - 4}, ${trackY - 24})`}>
-        <rect x="0" y="0" width="8" height="32" fill="#DC2626" rx="1" />
-        <line x1="0" y1="8" x2="8" y2="8" stroke="#FFFFFF" strokeWidth="3" />
-        <line x1="0" y1="20" x2="8" y2="20" stroke="#FFFFFF" strokeWidth="3" />
-        <circle cx="4" cy="-4" r="3" fill="#EF4444" />
-        <circle cx="4" cy="-4" r="5" fill="url(#signal-red-glow)" opacity="0.8" />
+      <g transform={`translate(${xEnd - 2}, ${trackY - 11})`}>
+        <rect x="0" y="0" width="4" height="18" fill="#DC2626" rx="0.5" />
+        <line x1="0" y1="5" x2="4" y2="5" stroke="#FFFFFF" strokeWidth="1.5" />
+        <line x1="0" y1="12" x2="4" y2="12" stroke="#FFFFFF" strokeWidth="1.5" />
+        <circle cx="2" cy="-2" r="1.5" fill="#EF4444" className="anim-signal-pulse" />
       </g>
 
-      {/* 3. Authentic Yellow Railway Maintenance Vehicle (Tower Wagon / Track Machine) */}
-      <g className="maintenance-vehicle" transform={`translate(${midX - 40}, ${trackY})`}>
-        {/* Wheels on Rails */}
-        <circle cx="12" cy="7" r="4.5" fill="#1E293B" stroke="#475569" strokeWidth="1" />
-        <circle cx="68" cy="7" r="4.5" fill="#1E293B" stroke="#475569" strokeWidth="1" />
+      {/* 3. Miniature Yellow Maintenance Vehicle with ANIMATED FLASHING STROBE */}
+      <g transform={`translate(${midX - 22}, ${trackY})`}>
+        {/* Wheels */}
+        <circle cx="6" cy="4" r="2.2" fill="#1E293B" stroke="#475569" strokeWidth="0.6" />
+        <circle cx="38" cy="4" r="2.2" fill="#1E293B" stroke="#475569" strokeWidth="0.6" />
 
-        {/* Machine Body in High-Visibility Safety Yellow */}
-        <rect x="0" y="-24" width="80" height="22" rx="2" fill="#EAB308" stroke="#0F172A" strokeWidth="1.2" />
-        <line x1="0" y1="-8" x2="80" y2="-8" stroke="#CA8A04" strokeWidth="2" />
+        {/* Vehicle Body in Safety Yellow */}
+        <rect x="0" y="-12" width="44" height="12" rx="1.5" fill="#EAB308" stroke="#0F172A" strokeWidth="0.8" />
+        <rect x="4" y="-10" width="8" height="5" fill="#38BDF8" stroke="#0F172A" strokeWidth="0.4" />
+        <rect x="15" y="-10" width="8" height="5" fill="#38BDF8" stroke="#0F172A" strokeWidth="0.4" />
 
-        {/* Cab Window & Flashing Strobe */}
-        <rect x="8" y="-20" width="16" height="9" fill="#0284C7" stroke="#0F172A" strokeWidth="0.8" />
-        <rect x="30" y="-20" width="16" height="9" fill="#0284C7" stroke="#0F172A" strokeWidth="0.8" />
-        <circle cx="16" cy="-26" r="3" fill="#F97316" />
-        <circle cx="16" cy="-26" r="6" fill="url(#signal-yellow-glow)" opacity="0.8" />
+        {/* Animated Strobe Beacon */}
+        <circle cx="8" cy="-14" r="2" fill="#F59E0B" className="anim-strobe-flash" />
 
-        {/* Raised Articulated Inspection Platform reaching Overhead Line */}
-        <line x1="56" y1="-24" x2="62" y2="-44" stroke="#475569" strokeWidth="2.5" />
-        <line x1="68" y1="-24" x2="62" y2="-44" stroke="#475569" strokeWidth="2.5" />
-        {/* Scissor lift cradle */}
-        <rect x="52" y="-48" width="22" height="6" fill="#1E293B" stroke="#EAB308" strokeWidth="1" />
-
-        {/* Maintenance Crew Worker on Lift with Hardhat */}
-        <circle cx="63" cy="-52" r="2.5" fill="#F8FAFC" />
-        <rect x="60.5" y="-55" width="5" height="2.5" fill="#EA580C" rx="1" />
-
-        {/* Track-level Worker with Inspection Tool */}
-        <g transform="translate(-18, -14)">
-          {/* Head & Safety Helmet */}
-          <circle cx="0" cy="0" r="2.8" fill="#F8FAFC" />
-          <rect x="-2.5" y="-3.5" width="5" height="2" fill="#EA580C" rx="0.8" />
-          {/* High-Vis Orange Vest Body */}
-          <rect x="-3" y="2.8" width="6" height="8" fill="#F97316" rx="1" />
-          {/* Tool */}
-          <line x1="3" y1="4" x2="8" y2="14" stroke="#64748B" strokeWidth="1.5" />
-        </g>
+        {/* Raised Inspection Cradle */}
+        <line x1="30" y1="-12" x2="34" y2="-21" stroke="#475569" strokeWidth="1.2" />
+        <line x1="38" y1="-12" x2="34" y2="-21" stroke="#475569" strokeWidth="1.2" />
+        <rect x="28" y="-23" width="12" height="3" fill="#1E293B" stroke="#EAB308" strokeWidth="0.6" />
+        {/* Worker in Orange Vest */}
+        <circle cx="34" cy="-25" r="1.5" fill="#F97316" />
       </g>
 
-      {/* 4. Prominent HUD Possession Banner */}
-      <g transform={`translate(${midX}, ${trackY - 48})`}>
+      {/* 4. Compact Floating HUD Pill */}
+      <g transform={`translate(${midX}, ${trackY - 24})`}>
         <rect
-          x="-140"
-          y="-14"
-          width="280"
-          height="22"
-          rx="4"
+          x="-90"
+          y="-7"
+          width="180"
+          height="14"
+          rx="2"
           fill="#FFFFFF"
           stroke="#DC2626"
-          strokeWidth="1.8"
-          filter="drop-shadow(0 2px 4px rgba(0,0,0,0.12))"
+          strokeWidth="1.2"
+          filter="drop-shadow(0 1px 3px rgba(0,0,0,0.12))"
         />
         <text
           x="0"
-          y="1"
-          fontSize="9.5"
+          y="3"
+          fontSize="7"
           fontWeight="800"
           textAnchor="middle"
           fill="#991B1B"
           fontFamily="var(--font-sans)"
         >
-          ⛔ POSSESSION ACTIVE: {block?.block_id} ({block?.start_time}–{block?.end_time}) · {block?.departments?.join(' + ')}
+          ⛔ POSSESSION: {block?.block_id} ({block?.start_time}–{block?.end_time}) · {block?.departments?.join('+')}
         </text>
       </g>
     </g>
@@ -728,12 +453,11 @@ export default function OperationsCenter({
   scheduledBlocks = [],
   metrics,
 }) {
-  // Simulation Clock: range 06:00 (360m) to 22:00 (1320m)
-  const START_MIN = 360;
-  const END_MIN = 1320;
-  const [simTime, setSimTime] = useState(540); // Default to 09:00 (540m)
-  const [tickSec, setTickSec] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  // Continuous simulation time (minutes from midnight, e.g. 540.0 = 09:00:00)
+  const START_MIN = 360;  // 06:00
+  const END_MIN = 1320;   // 22:00
+  const [simTime, setSimTime] = useState(540); // Default to 09:00:00
+  const [isPlaying, setIsPlaying] = useState(true); // Default animated and playing!
   const [speed, setSpeed] = useState(2); // 1x, 2x, 4x, 8x
   const [selectedTrain, setSelectedTrain] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState('Track 1');
@@ -741,25 +465,39 @@ export default function OperationsCenter({
   const [timetableSearch, setTimetableSearch] = useState('');
   const [timetableTrackFilter, setTimetableTrackFilter] = useState('ALL');
 
-  // Animation playback loop
+  // Continuous smooth 60 FPS animation loop
   useEffect(() => {
     if (!isPlaying) return;
-    const intervalMs = 1000 / (speed * 2);
-    const timer = setInterval(() => {
+    let lastTime = performance.now();
+    let animId;
+
+    const tick = (now) => {
+      const dt = (now - lastTime) / 1000; // in seconds
+      lastTime = now;
+
+      // At speed 1x: 1 real sec = 30 sim secs (0.5 sim min)
+      // At speed 2x: 1 real sec = 60 sim secs (1.0 sim min)
+      // At speed 4x: 1 real sec = 120 sim secs (2.0 sim mins)
+      // At speed 8x: 1 real sec = 240 sim secs (4.0 sim mins)
+      const deltaMin = dt * (speed * 0.5);
+
       setSimTime((prev) => {
-        if (prev >= END_MIN) {
+        const next = prev + deltaMin;
+        if (next >= END_MIN) {
           setIsPlaying(false);
           return END_MIN;
         }
-        return prev + 1;
+        return next;
       });
-      setTickSec((prev) => (prev + 30) % 60);
-    }, intervalMs);
 
-    return () => clearInterval(timer);
+      animId = requestAnimationFrame(tick);
+    };
+
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
   }, [isPlaying, speed]);
 
-  // Keyboard shortcut: Spacebar to toggle Play/Pause
+  // Spacebar toggle Play/Pause
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
@@ -774,59 +512,54 @@ export default function OperationsCenter({
   const handleReset = () => {
     setIsPlaying(false);
     setSimTime(540); // 09:00:00
-    setTickSec(0);
   };
 
   const handleStep = (delta) => {
     setSimTime((prev) => Math.max(START_MIN, Math.min(END_MIN, prev + delta)));
   };
 
-  // 4 Primary Corridors & Track Properties
+  // 4 Tracks in Compact Layout (Height pitch = 40px)
   const TRACKS = [
     {
       id: 'Track 1',
-      name: 'Track 1 (Up Main Line)',
-      direction: 'EAST', // Station A -> Station B
+      name: 'Track 1 (Up Main)',
+      direction: 'EAST',
       dirLabel: 'Eastbound (Station A → Station B)',
       arrow: '→',
-      type: 'Passenger High-Speed Main Line',
-      speedLimit: '130 km/h',
-      y: 90,
+      type: 'Passenger Main Line (130 km/h)',
+      y: 26,
     },
     {
       id: 'Track 2',
-      name: 'Track 2 (Down Main Line)',
-      direction: 'WEST', // Station B -> Station A
+      name: 'Track 2 (Down Main)',
+      direction: 'WEST',
       dirLabel: 'Westbound (Station B → Station A)',
       arrow: '←',
-      type: 'Passenger High-Speed Main Line',
-      speedLimit: '130 km/h',
-      y: 190,
+      type: 'Passenger Main Line (130 km/h)',
+      y: 68,
     },
     {
       id: 'Track 3',
-      name: 'Track 3 (Loop / Overtake Line)',
-      direction: 'EAST', // Bi-directional overtake
-      dirLabel: 'Bi-directional Loop (Overtake & Platform Loop)',
+      name: 'Track 3 (Loop Line)',
+      direction: 'EAST',
+      dirLabel: 'Loop & Overtake Line (75 km/h)',
       arrow: '⇄',
-      type: 'Passenger Loop & Staging Line',
-      speedLimit: '75 km/h',
-      y: 290,
+      type: 'Passenger Loop Line',
+      y: 110,
     },
     {
       id: 'Track 4',
-      name: 'Track 4 (Freight / Goods Line)',
-      direction: 'WEST', // Dedicated Freight
-      dirLabel: 'Dedicated Freight Corridor (Heavy Haul)',
+      name: 'Track 4 (Freight)',
+      direction: 'WEST',
+      dirLabel: 'Dedicated Freight Corridor (100 km/h)',
       arrow: '⇄',
       type: 'Heavy Freight Corridor',
-      speedLimit: '100 km/h',
-      y: 390,
+      y: 152,
     },
   ];
 
-  // Train statuses and positions calculated deterministically from simulation clock
-  // SVG Width: 1360px. Platform A: 140px. Platform B: 1220px. Mainline span: 1080px.
+  // Train statuses and smooth positions calculated continuously from simTime
+  // SVG Width: 1000px. Platform A: 65px. Platform B: 935px. Mainline span: 870px.
   const trainSimStates = useMemo(() => {
     return trains.map((t) => {
       const arr = timeToMin(t.arrival_time);
@@ -835,32 +568,32 @@ export default function OperationsCenter({
       const isFreight = t.train_id.includes('GOODS') || t.track === 'Track 4' || t.train_name.toLowerCase().includes('freight');
 
       let state = 'SCHEDULED';
-      let progress = 0; // 0 to 1
-      let posX = isEastbound ? 280 : 1080; // Default platform position
+      let progress = 0; // 0.0 to 1.0 continuous float
+      let posX = isEastbound ? 160 : 840; // Default platform position
 
       if (simTime < arr) {
         if (arr - simTime <= 25) {
           state = 'APPROACHING';
           const approachProg = 1 - (arr - simTime) / 25;
-          posX = isEastbound ? 80 + approachProg * 200 : 1280 - approachProg * 200;
+          posX = isEastbound ? 60 + approachProg * 100 : 940 - approachProg * 100;
         } else {
           state = 'SCHEDULED';
-          posX = isEastbound ? 80 : 1280;
+          posX = isEastbound ? 60 : 940;
         }
       } else if (simTime >= arr && simTime <= dep) {
         state = 'IN_TRANSIT';
         const span = Math.max(1, dep - arr);
         progress = (simTime - arr) / span;
-        // Move smoothly along the corridor
-        posX = isEastbound ? 280 + progress * 800 : 1080 - progress * 800;
+        // Smooth continuous 60 FPS motion across the corridor
+        posX = isEastbound ? 160 + progress * 680 : 840 - progress * 680;
       } else if (simTime > dep) {
         if (simTime - dep <= 20) {
           state = 'CLEARING';
           const clearProg = (simTime - dep) / 20;
-          posX = isEastbound ? 1080 + clearProg * 180 : 280 - clearProg * 180;
+          posX = isEastbound ? 840 + clearProg * 100 : 160 - clearProg * 100;
         } else {
           state = 'COMPLETED';
-          posX = isEastbound ? 1300 : 60;
+          posX = isEastbound ? 960 : 40;
         }
       }
 
@@ -868,14 +601,14 @@ export default function OperationsCenter({
         ...t,
         state,
         progress,
-        posX: Math.max(60, Math.min(1300, posX)),
+        posX: Math.max(40, Math.min(960, posX)),
         isEastbound,
         isFreight,
       };
     });
   }, [trains, simTime]);
 
-  // Section states at current simulation clock
+  // Section states
   const trackSectionStates = useMemo(() => {
     const states = {};
 
@@ -883,7 +616,6 @@ export default function OperationsCenter({
       const trackBlocks = scheduledBlocks.filter((b) => b.track === track.id);
       let activeBlock = null;
       let upcomingBlock = null;
-      let completedBlock = null;
 
       for (const b of trackBlocks) {
         const bStart = timeToMin(b.start_time);
@@ -894,41 +626,33 @@ export default function OperationsCenter({
           break;
         } else if (simTime >= bStart - 60 && simTime < bStart) {
           upcomingBlock = b;
-        } else if (simTime > bEnd && simTime <= bEnd + 45) {
-          completedBlock = b;
         }
       }
 
-      // Check active trains on this track
       const activeTrains = trainSimStates.filter(
         (t) => t.track === track.id && t.state === 'IN_TRANSIT'
       );
 
       let status = 'AVAILABLE';
-      let statusColor = '#24613B'; // Green
-      let statusLabel = 'AVAILABLE (Clear Section)';
+      let statusColor = '#24613B';
+      let statusLabel = 'CLEAR (Available)';
       let signalAspect = 'GREEN';
 
       if (activeBlock) {
         status = 'MAINTENANCE_BLOCKED';
-        statusColor = '#DC2626'; // Red
-        statusLabel = `MAINTENANCE BLOCKED (${activeBlock.block_id})`;
+        statusColor = '#DC2626';
+        statusLabel = `BLOCKED (${activeBlock.block_id})`;
         signalAspect = 'RED';
       } else if (activeTrains.length > 0) {
         status = 'TRAIN_OCCUPIED';
-        statusColor = '#1D4ED8'; // Cobalt
-        statusLabel = `TRAIN OCCUPIED (${activeTrains.map((t) => t.train_id).join(', ')})`;
+        statusColor = '#1D4ED8';
+        statusLabel = `OCCUPIED (${activeTrains.map((t) => t.train_id).join(', ')})`;
         signalAspect = 'RED';
       } else if (upcomingBlock) {
         status = 'UPCOMING_MAINTENANCE';
-        statusColor = '#B45309'; // Amber
-        statusLabel = `UPCOMING MAINTENANCE (${upcomingBlock.start_time} - ${upcomingBlock.end_time})`;
+        statusColor = '#B45309';
+        statusLabel = `UPCOMING (${upcomingBlock.start_time})`;
         signalAspect = 'YELLOW';
-      } else if (completedBlock) {
-        status = 'COMPLETED_MAINTENANCE';
-        statusColor = '#6E7681';
-        statusLabel = 'MAINTENANCE COMPLETED (Track Restored)';
-        signalAspect = 'GREEN';
       }
 
       states[track.id] = {
@@ -938,16 +662,14 @@ export default function OperationsCenter({
         signalAspect,
         activeBlock,
         upcomingBlock,
-        completedBlock,
         activeTrains,
-        trackBlocks,
       };
     });
 
     return states;
   }, [scheduledBlocks, trainSimStates, simTime]);
 
-  // Filtered timetable for drawer
+  // Filtered timetable
   const filteredTimetable = useMemo(() => {
     return trains.filter((t) => {
       const matchTrack = timetableTrackFilter === 'ALL' || t.track === timetableTrackFilter;
@@ -962,35 +684,60 @@ export default function OperationsCenter({
   const selectedTrackData = trackSectionStates[selectedTrack];
   const selectedTrackInfo = TRACKS.find((t) => t.id === selectedTrack);
 
-  // Generate sleeper X positions (every 16px from x=50 to x=1310)
-  const sleeperPositions = useMemo(() => {
+  // Generate sleeper positions for compact track (every 10px from x=60 to 940)
+  const compactSleepers = useMemo(() => {
     const list = [];
-    for (let x = 60; x <= 1300; x += 15) {
+    for (let x = 65; x <= 935; x += 10) {
       list.push(x);
     }
     return list;
   }, []);
 
   return (
-    <div className="anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* 1. TOP SIMULATION TELEMETRY & CLOCK BAR */}
+    <div className="anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* INJECT ANIMATION KEYFRAMES */}
+      <style>{`
+        @keyframes strobe-pulse {
+          0%, 100% { opacity: 0.3; transform: scale(0.9); }
+          50% { opacity: 1; transform: scale(1.4); filter: drop-shadow(0 0 5px #F59E0B); }
+        }
+        @keyframes signal-glow {
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
+        }
+        @keyframes wheel-rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .anim-strobe-flash {
+          animation: strobe-pulse 0.75s infinite ease-in-out;
+        }
+        .anim-signal-pulse {
+          animation: signal-glow 1.8s infinite ease-in-out;
+        }
+        .anim-wheel {
+          transform-origin: center;
+          animation: wheel-rotate 0.6s infinite linear;
+        }
+      `}</style>
+
+      {/* 1. TOP SIMULATION HEADER & COMPACT TELEMETRY */}
       <div
         style={{
           background: 'var(--c-surface)',
           border: '1px solid var(--c-border)',
           borderRadius: 'var(--radius-xs)',
-          padding: '12px 18px',
+          padding: '10px 16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '14px',
+          gap: '12px',
         }}
       >
-        {/* Left: Operational Mode & Network Identity */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h2 className="page-title" style={{ margin: 0, fontSize: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 className="page-title" style={{ margin: 0, fontSize: '16px' }}>
               Operations Center
             </h2>
             <span
@@ -999,7 +746,7 @@ export default function OperationsCenter({
                 background: isPlaying ? '#DCFCE7' : '#F1F5F9',
                 color: isPlaying ? '#15803D' : '#475569',
                 fontWeight: '700',
-                fontSize: '11px',
+                fontSize: '10.5px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
@@ -1007,124 +754,121 @@ export default function OperationsCenter({
             >
               <span
                 style={{
-                  width: '7px',
-                  height: '7px',
+                  width: '6px',
+                  height: '6px',
                   borderRadius: '50%',
                   background: isPlaying ? '#16A34A' : '#94A3B8',
                   display: 'inline-block',
                 }}
               />
-              {isPlaying ? `SIMULATION ACTIVE (${speed}x)` : 'SIMULATION PAUSED'}
+              {isPlaying ? `LIVE (${speed}x)` : 'PAUSED'}
             </span>
           </div>
-          <div className="page-description" style={{ marginTop: '2px' }}>
-            Real-time visual simulation of railway network Section A–B under live train schedules & maintenance block possessions
+          <div style={{ fontSize: '11px', color: 'var(--c-text-secondary)', marginTop: '2px' }}>
+            Interactive simulation of Section A–B corridor with physical tracks, moving trainsets, and maintenance possessions
           </div>
         </div>
 
-        {/* Right: Digital Military Clock & Live Operational Indicators */}
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        {/* Digital Military Clock & Live Operational Badges */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div
             style={{
               background: '#F8FAFC',
               color: '#0F172A',
               border: '1px solid #CBD5E1',
-              padding: '6px 14px',
+              padding: '4px 10px',
               borderRadius: 'var(--radius-xs)',
               fontFamily: 'var(--font-mono)',
-              fontSize: '18px',
+              fontSize: '15px',
               fontWeight: '700',
-              letterSpacing: '0.08em',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              gap: '6px',
             }}
           >
-            <span style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase' }}>SIM CLOCK</span>
-            <span style={{ color: '#0284C7' }}>{formatDigitalClock(simTime, tickSec)}</span>
+            <span style={{ fontSize: '10px', color: '#64748B' }}>CLOCK:</span>
+            <span style={{ color: '#0284C7' }}>{formatDigitalClock(simTime)}</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', fontSize: '11.5px' }}>
-            <span style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '4px 8px', borderRadius: '2px', fontWeight: '600' }}>
-              ACTIVE TRAINS: <strong style={{ color: '#1D4ED8' }}>{trainSimStates.filter((t) => t.state === 'IN_TRANSIT').length}</strong>
+          <div style={{ display: 'flex', gap: '8px', fontSize: '11px' }}>
+            <span style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '3px 8px', borderRadius: '2px', fontWeight: '600' }}>
+              TRAINS: <strong style={{ color: '#1D4ED8' }}>{trainSimStates.filter((t) => t.state === 'IN_TRANSIT').length}</strong>
             </span>
-            <span style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '4px 8px', borderRadius: '2px', fontWeight: '600' }}>
-              ACTIVE BLOCKS: <strong style={{ color: '#DC2626' }}>{Object.values(trackSectionStates).filter((s) => s.status === 'MAINTENANCE_BLOCKED').length}</strong>
+            <span style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '3px 8px', borderRadius: '2px', fontWeight: '600' }}>
+              BLOCKS: <strong style={{ color: '#DC2626' }}>{Object.values(trackSectionStates).filter((s) => s.status === 'MAINTENANCE_BLOCKED').length}</strong>
             </span>
           </div>
         </div>
       </div>
 
-      {/* 2. THE MAIN ATTRACTION: PHYSICAL RAILWAY TRACKS & MOVING TRAIN SIMULATION SCENE */}
+      {/* 2. COMPACT ANIMATED RAILWAY SIMULATION VIEWPORT */}
       <div
         className="ops-panel"
         style={{
           border: '1px solid var(--c-border)',
           borderRadius: 'var(--radius-xs)',
-          background: '#FFFFFF', // Clean White Operations Dashboard
-          color: 'var(--c-text-primary)',
+          background: '#FFFFFF',
           overflow: 'hidden',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
         }}
       >
-        {/* Schematic Control & Status Header Strip */}
+        {/* Compact Corridor Header & Legend */}
         <div
           style={{
-            padding: '10px 16px',
+            padding: '8px 14px',
             background: '#F8FAFC',
             borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '11.5px',
+            fontSize: '11px',
             flexWrap: 'wrap',
             gap: '8px',
           }}
         >
-          <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
-            <span style={{ fontWeight: '800', letterSpacing: '0.06em', color: '#0284C7' }}>
-              MAINLINE CORRIDOR SCHEMATIC · 2.5D ELEVATION
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <span style={{ fontWeight: '800', color: '#0284C7' }}>
+              SECTION A–B (26.5 KM)
             </span>
             <span style={{ color: '#CBD5E1' }}>|</span>
             <span>
-              TERMINAL A: <strong style={{ color: '#0F172A' }}>WEST JN (KM 42.0)</strong>
+              STATION A: <strong style={{ color: '#0F172A' }}>WEST JN</strong>
             </span>
             <span style={{ color: '#94A3B8' }}>⟷</span>
             <span>
-              TERMINAL B: <strong style={{ color: '#0F172A' }}>EAST JN (KM 68.5)</strong>
+              STATION B: <strong style={{ color: '#0F172A' }}>EAST JN</strong>
             </span>
           </div>
 
-          {/* Operational Status Legend */}
-          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', fontSize: '11px', color: '#475569' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16A34A' }}></span>
+          {/* Status Legend */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontSize: '10.5px', color: '#475569' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#16A34A' }}></span>
               Clear Track
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB' }}></span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#2563EB' }}></span>
               Train Occupied
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#DC2626' }}></span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: '#DC2626' }}></span>
               Maintenance Block
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D97706' }}></span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#D97706' }}></span>
               Upcoming
             </span>
           </div>
         </div>
 
-        {/* HIGH-PRECISION VECTOR SVG RAILWAY SIMULATION SCENE */}
+        {/* COMPACT ANIMATED SVG CANVAS (185px clean height) */}
         <div style={{ width: '100%', position: 'relative', background: '#F8FAFC' }}>
           <svg
-            viewBox="0 0 1360 480"
-            style={{ width: '100%', height: 'auto', display: 'block' }}
+            viewBox="0 0 1000 176"
+            style={{ width: '100%', height: 'auto', maxHeight: '210px', display: 'block' }}
           >
             <defs>
-              {/* Ballast Embankment Gradient for Daylight / White Scene */}
+              {/* Ballast Gradient */}
               <linearGradient id="ballast-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#CBD5E1" stopOpacity="0.95" />
                 <stop offset="50%" stopColor="#94A3B8" stopOpacity="1" />
@@ -1134,7 +878,7 @@ export default function OperationsCenter({
               {/* Polished Steel Rail Gradient */}
               <linearGradient id="steel-rail-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="35%" stopColor="#CBD5E1" />
+                <stop offset="30%" stopColor="#CBD5E1" />
                 <stop offset="70%" stopColor="#64748B" />
                 <stop offset="100%" stopColor="#334155" />
               </linearGradient>
@@ -1142,137 +886,70 @@ export default function OperationsCenter({
               {/* Headlight Illuminated Beam Gradients */}
               <linearGradient id="headlight-beam-east" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#FEF08A" stopOpacity="0.85" />
-                <stop offset="40%" stopColor="#FEF08A" stopOpacity="0.35" />
+                <stop offset="50%" stopColor="#FEF08A" stopOpacity="0.3" />
                 <stop offset="100%" stopColor="#FEF08A" stopOpacity="0.0" />
               </linearGradient>
               <linearGradient id="headlight-beam-west" x1="100%" y1="0%" x2="0%" y2="0%">
                 <stop offset="0%" stopColor="#FEF08A" stopOpacity="0.85" />
-                <stop offset="40%" stopColor="#FEF08A" stopOpacity="0.35" />
+                <stop offset="50%" stopColor="#FEF08A" stopOpacity="0.3" />
                 <stop offset="100%" stopColor="#FEF08A" stopOpacity="0.0" />
               </linearGradient>
 
-              {/* Lamp Glow Gradients */}
               <radialGradient id="headlight-glow" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
                 <stop offset="40%" stopColor="#FEF08A" stopOpacity="0.8" />
                 <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
               </radialGradient>
-              <radialGradient id="signal-green-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#86EFAC" stopOpacity="1" />
-                <stop offset="50%" stopColor="#22C55E" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="signal-red-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#FCA5A5" stopOpacity="1" />
-                <stop offset="50%" stopColor="#EF4444" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#EF4444" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="signal-yellow-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#FDE68A" stopOpacity="1" />
-                <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
-              </radialGradient>
 
-              {/* Maintenance Possession Caution Stripes Pattern */}
-              <pattern id="caution-diagonal-stripes" width="20" height="20" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                <rect x="0" y="0" width="10" height="20" fill="#DC2626" opacity="0.4" />
-                <rect x="10" y="0" width="10" height="20" fill="#FBBF24" opacity="0.4" />
+              {/* Caution Diagonal Hash Pattern */}
+              <pattern id="caution-diagonal-stripes" width="12" height="12" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                <rect x="0" y="0" width="6" height="12" fill="#DC2626" opacity="0.4" />
+                <rect x="6" y="0" width="6" height="12" fill="#FBBF24" opacity="0.4" />
               </pattern>
             </defs>
 
-            {/* --- 1. OVERHEAD CATENARY SYSTEM (OHE LATTICE MASTS & CONTACT WIRES) --- */}
-            {/* Catenary Contact Wires for Each Track */}
+            {/* --- 1. OVERHEAD CONTACT WIRES (Thin & Subtle) --- */}
             {TRACKS.map((t) => (
               <line
                 key={`wire-${t.id}`}
-                x1="40"
-                y1={t.y - 52}
-                x2="1320"
-                y2={t.y - 52}
+                x1="20"
+                y1={t.y - 18}
+                x2="980"
+                y2={t.y - 18}
                 stroke="#94A3B8"
-                strokeWidth="0.8"
-                strokeDasharray="140 1"
-                opacity="0.8"
+                strokeWidth="0.6"
+                strokeDasharray="80 1"
+                opacity="0.6"
               />
             ))}
 
-            {/* Catenary Steel Lattice Masts at Regular 220px Intervals */}
-            {[260, 480, 700, 920, 1140].map((mx) => (
-              <g key={`mast-${mx}`} opacity="0.55">
-                {/* Vertical Lattice Steel Column */}
-                <line x1={mx} y1="30" x2={mx} y2="440" stroke="#64748B" strokeWidth="2.5" />
-                <line x1={mx + 6} y1="30" x2={mx + 6} y2="440" stroke="#64748B" strokeWidth="2.5" />
-                {/* Horizontal & Diagonal Lattice Braces */}
-                {[50, 100, 150, 200, 250, 300, 350, 400].map((by) => (
-                  <React.Fragment key={by}>
-                    <line x1={mx} y1={by} x2={mx + 6} y2={by} stroke="#94A3B8" strokeWidth="1" />
-                    <line x1={mx} y1={by} x2={mx + 6} y2={by + 25} stroke="#94A3B8" strokeWidth="0.8" />
-                  </React.Fragment>
-                ))}
-                {/* Cantilever Registration Arms over tracks */}
-                {TRACKS.map((t) => (
-                  <g key={`cantilever-${mx}-${t.id}`}>
-                    <line x1={mx + 6} y1={t.y - 62} x2={mx + 28} y2={t.y - 52} stroke="#64748B" strokeWidth="1.2" />
-                    {/* Porcelain Insulator */}
-                    <rect x={mx + 22} y={t.y - 56} width="6" height="3" fill="#0284C7" rx="0.5" />
-                  </g>
-                ))}
-              </g>
-            ))}
-
-            {/* --- 2. STATION TERMINAL PLATFORMS AT BOTH ENDS --- */}
-            {/* STATION A (WEST JUNCTION) - Left Platform Complex */}
-            <g className="station-a-complex">
-              {/* Platform Apron Base with Tactile Yellow Safety Coping Stones */}
-              <rect x="0" y="45" width="130" height="385" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="1.5" />
-              {/* Platform Safety Yellow Edge Line */}
-              <line x1="128" y1="45" x2="128" y2="430" stroke="#F59E0B" strokeWidth="3.5" />
-              <line x1="124" y1="45" x2="124" y2="430" stroke="#1E293B" strokeWidth="1" strokeDasharray="6 6" />
-
-              {/* Station Modern Canopy Roof Structure */}
-              <rect x="4" y="55" width="116" height="365" fill="#FFFFFF" rx="3" stroke="#CBD5E1" strokeWidth="1" />
-              {/* Canopy Trusses */}
-              {[90, 190, 290, 390].map((py) => (
-                <g key={`canopy-a-${py}`}>
-                  <line x1="8" y1={py - 25} x2="116" y2={py - 25} stroke="#94A3B8" strokeWidth="1" />
-                  <line x1="8" y1={py + 25} x2="116" y2={py + 25} stroke="#94A3B8" strokeWidth="1" />
-                </g>
-              ))}
-
-              {/* Station Nameboard (Indian Railways Classic Yellow Board) */}
-              <rect x="14" y="15" width="102" height="26" fill="#FBBF24" stroke="#0F172A" strokeWidth="1.2" rx="2" />
-              <text x="65" y="27" fontSize="7" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="var(--font-sans)">
-                पश्चिम जंक्शन
-              </text>
-              <text x="65" y="37" fontSize="8" fontWeight="800" textAnchor="middle" fill="#0F172A" fontFamily="var(--font-sans)">
-                STATION A (WEST JN)
+            {/* --- 2. COMPACT TERMINAL PLATFORMS AT OPPOSITE ENDS --- */}
+            {/* Station A (West Terminal) on Left */}
+            <g className="stn-a-compact">
+              <rect x="0" y="8" width="65" height="160" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="1" />
+              {/* Platform Yellow Safety Tactile Edge */}
+              <line x1="64" y1="8" x2="64" y2="168" stroke="#F59E0B" strokeWidth="2.5" />
+              {/* Canopy */}
+              <rect x="2" y="14" width="58" height="148" fill="#FFFFFF" rx="1.5" stroke="#CBD5E1" strokeWidth="0.8" />
+              {/* Nameboard */}
+              <rect x="6" y="2" width="50" height="12" fill="#FBBF24" stroke="#0F172A" strokeWidth="0.8" rx="1" />
+              <text x="31" y="10" fontSize="5.5" fontWeight="800" textAnchor="middle" fill="#0F172A" fontFamily="var(--font-sans)">
+                STN A (WEST)
               </text>
             </g>
 
-            {/* STATION B (EAST JUNCTION) - Right Platform Complex */}
-            <g className="station-b-complex">
-              <rect x="1230" y="45" width="130" height="385" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="1.5" />
-              <line x1="1232" y1="45" x2="1232" y2="430" stroke="#F59E0B" strokeWidth="3.5" />
-              <line x1="1236" y1="45" x2="1236" y2="430" stroke="#1E293B" strokeWidth="1" strokeDasharray="6 6" />
-
-              <rect x="1240" y="55" width="116" height="365" fill="#FFFFFF" rx="3" stroke="#CBD5E1" strokeWidth="1" />
-              {[90, 190, 290, 390].map((py) => (
-                <g key={`canopy-b-${py}`}>
-                  <line x1="1244" y1={py - 25} x2="1352" y2={py - 25} stroke="#94A3B8" strokeWidth="1" />
-                  <line x1="1244" y1={py + 25} x2="1352" y2={py + 25} stroke="#94A3B8" strokeWidth="1" />
-                </g>
-              ))}
-
-              <rect x="1244" y="15" width="102" height="26" fill="#FBBF24" stroke="#0F172A" strokeWidth="1.2" rx="2" />
-              <text x="1295" y="27" fontSize="7" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="var(--font-sans)">
-                पूर्व जंक्शन
-              </text>
-              <text x="1295" y="37" fontSize="8" fontWeight="800" textAnchor="middle" fill="#0F172A" fontFamily="var(--font-sans)">
-                STATION B (EAST JN)
+            {/* Station B (East Terminal) on Right */}
+            <g className="stn-b-compact">
+              <rect x="935" y="8" width="65" height="160" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="1" />
+              <line x1="936" y1="8" x2="936" y2="168" stroke="#F59E0B" strokeWidth="2.5" />
+              <rect x="940" y="14" width="58" height="148" fill="#FFFFFF" rx="1.5" stroke="#CBD5E1" strokeWidth="0.8" />
+              <rect x="944" y="2" width="50" height="12" fill="#FBBF24" stroke="#0F172A" strokeWidth="0.8" rx="1" />
+              <text x="969" y="10" fontSize="5.5" fontWeight="800" textAnchor="middle" fill="#0F172A" fontFamily="var(--font-sans)">
+                STN B (EAST)
               </text>
             </g>
 
-            {/* --- 3. FOUR PHYSICAL RAILWAY TRACKS (BALLAST, SLEEPERS, DUAL STEEL RAILS) --- */}
+            {/* --- 3. FOUR COMPACT PHYSICAL TRACKS --- */}
             {TRACKS.map((track) => {
               const sec = trackSectionStates[track.id];
               const isSelected = selectedTrack === track.id;
@@ -1280,102 +957,69 @@ export default function OperationsCenter({
               return (
                 <g
                   key={track.id}
-                  className={`railway-track-lane ${isSelected ? 'track-selected' : ''}`}
                   onClick={() => setSelectedTrack(track.id)}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Track Selection Active Outline */}
+                  {/* Selection Outline */}
                   {isSelected && (
                     <rect
-                      x="50"
-                      y={track.y - 25}
-                      width="1260"
-                      height="50"
+                      x="25"
+                      y={track.y - 12}
+                      width="950"
+                      height="24"
                       fill="#E0F2FE"
-                      opacity="0.4"
+                      opacity="0.35"
                       stroke="#0284C7"
-                      strokeWidth="1.2"
+                      strokeWidth="1"
                     />
                   )}
 
-                  {/* A. Ballast Embankment Bed with Depth Shading */}
+                  {/* Ballast Embankment Bed */}
                   <polygon
-                    points={`50,${track.y - 18} 1310,${track.y - 18} 1316,${track.y + 20} 44,${track.y + 20}`}
+                    points={`25,${track.y - 8} 975,${track.y - 8} 978,${track.y + 9} 22,${track.y + 9}`}
                     fill="url(#ballast-gradient)"
                   />
-                  {/* Ballast Lower Shoulder Slope */}
-                  <line x1="44" y1={track.y + 20} x2="1316" y2={track.y + 20} stroke="#475569" strokeWidth="2.5" />
+                  <line x1="22" y1={track.y + 9} x2="978" y2={track.y + 9} stroke="#475569" strokeWidth="1.2" />
 
-                  {/* B. Individual Concrete Railway Sleepers / Ties */}
-                  {sleeperPositions.map((sx) => (
+                  {/* Concrete Sleepers (every 10px) */}
+                  {compactSleepers.map((sx) => (
                     <g key={`slp-${track.id}-${sx}`}>
-                      {/* Concrete Sleeper Body */}
-                      <rect
-                        x={sx - 2.5}
-                        y={track.y - 15}
-                        width="5"
-                        height="30"
-                        rx="0.5"
-                        fill="#F1F5F9"
-                        stroke="#CBD5E1"
-                        strokeWidth="0.6"
-                      />
-                      {/* Beveled Top Highlight */}
-                      <line x1={sx - 2} y1={track.y - 15} x2={sx + 2} y2={track.y - 15} stroke="#FFFFFF" strokeWidth="0.8" />
-                      {/* Pandrol Rail Fastener Clips on both rails */}
-                      <circle cx={sx} cy={track.y - 9} r="1.2" fill="#475569" />
-                      <circle cx={sx} cy={track.y + 9} r="1.2" fill="#475569" />
+                      <rect x={sx - 1.5} y={track.y - 6} width="3" height="12" rx="0.5" fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="0.4" />
+                      <circle cx={sx} cy={track.y - 4} r="0.7" fill="#475569" />
+                      <circle cx={sx} cy={track.y + 4} r="0.7" fill="#475569" />
                     </g>
                   ))}
 
-                  {/* C. Two Parallel Continuous Steel Rails (Gauge = 18px) */}
-                  {/* Top Rail (Center y - 9) */}
-                  <g className="rail-top">
-                    <line x1="40" y1={track.y - 9} x2="1320" y2={track.y - 9} stroke="#334155" strokeWidth="4.5" />
-                    <line x1="40" y1={track.y - 9} x2="1320" y2={track.y - 9} stroke="url(#steel-rail-gradient)" strokeWidth="2.8" />
-                    <line x1="40" y1={track.y - 9.5} x2="1320" y2={track.y - 9.5} stroke="#FFFFFF" strokeWidth="0.9" opacity="0.9" />
-                  </g>
+                  {/* Dual Continuous Parallel Steel Rails (Gauge = 8px) */}
+                  {/* Top Rail (y - 4) */}
+                  <line x1="20" y1={track.y - 4} x2="980" y2={track.y - 4} stroke="#334155" strokeWidth="2.8" />
+                  <line x1="20" y1={track.y - 4} x2="980" y2={track.y - 4} stroke="url(#steel-rail-gradient)" strokeWidth="1.8" />
+                  <line x1="20" y1={track.y - 4.2} x2="980" y2={track.y - 4.2} stroke="#FFFFFF" strokeWidth="0.6" opacity="0.9" />
 
-                  {/* Bottom Rail (Center y + 9) */}
-                  <g className="rail-bottom">
-                    <line x1="40" y1={track.y + 9} x2="1320" y2={track.y + 9} stroke="#334155" strokeWidth="4.5" />
-                    <line x1="40" y1={track.y + 9} x2="1320" y2={track.y + 9} stroke="url(#steel-rail-gradient)" strokeWidth="2.8" />
-                    <line x1="40" y1={track.y + 8.5} x2="1320" y2={track.y + 8.5} stroke="#FFFFFF" strokeWidth="0.9" opacity="0.9" />
-                  </g>
+                  {/* Bottom Rail (y + 4) */}
+                  <line x1="20" y1={track.y + 4} x2="980" y2={track.y + 4} stroke="#334155" strokeWidth="2.8" />
+                  <line x1="20" y1={track.y + 4} x2="980" y2={track.y + 4} stroke="url(#steel-rail-gradient)" strokeWidth="1.8" />
+                  <line x1="20" y1={track.y + 3.8} x2="980" y2={track.y + 3.8} stroke="#FFFFFF" strokeWidth="0.6" opacity="0.9" />
 
-                  {/* D. Integrated Track Identifier Badge (Inside Platform Zone) */}
-                  <g transform={`translate(14, ${track.y - 6})`}>
-                    <rect x="0" y="-8" width="102" height="16" rx="2" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="1" />
-                    <text x="51" y="3" fontSize="6.8" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="monospace">
-                      {track.name.split(' (')[0]} · {track.arrow} {track.speedLimit}
+                  {/* Track Label Badge at Left Platform Exit */}
+                  <g transform={`translate(7, ${track.y})`}>
+                    <rect x="0" y="-5" width="48" height="10" rx="1.5" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.8" />
+                    <text x="24" y="2.5" fontSize="5.2" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="monospace">
+                      {track.name.replace('Track ', 'T')} · {track.arrow}
                     </text>
                   </g>
 
-                  {/* E. Multi-Aspect Signals at Section Approaches */}
-                  {/* Station A Starter Signal */}
-                  <SignalPost
-                    x={145}
-                    y={track.y}
-                    aspect={sec.signalAspect}
-                    signalId={`S-${track.id.replace('Track ', '')}A`}
-                    orientation="EAST"
-                  />
-                  {/* Station B Home Signal */}
-                  <SignalPost
-                    x={1215}
-                    y={track.y}
-                    aspect={sec.signalAspect}
-                    signalId={`S-${track.id.replace('Track ', '')}B`}
-                    orientation="WEST"
-                  />
+                  {/* Compact Signals */}
+                  <CompactSignal x={72} y={track.y} aspect={sec.signalAspect} signalId={`S${track.id.replace('Track ', '')}A`} />
+                  <CompactSignal x={928} y={track.y} aspect={sec.signalAspect} signalId={`S${track.id.replace('Track ', '')}B`} />
 
-                  {/* F. Active Maintenance Block Possession Zone (if active) */}
+                  {/* Active Maintenance Work Zone */}
                   {sec.status === 'MAINTENANCE_BLOCKED' && sec.activeBlock && (
-                    <MaintenanceWorkZone
+                    <CompactMaintenanceZone
                       block={sec.activeBlock}
                       trackY={track.y}
-                      xStart={380}
-                      xEnd={960}
+                      xStart={280}
+                      xEnd={720}
                       isSelected={selectedTrack === track.id}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1387,7 +1031,7 @@ export default function OperationsCenter({
               );
             })}
 
-            {/* --- 4. MOVING REALISTIC TRAIN MODELS (PASSENGER & FREIGHT) --- */}
+            {/* --- 4. MOVING ANIMATED TRAINS --- */}
             {trainSimStates.map((train) => {
               if (train.state !== 'IN_TRANSIT' && train.state !== 'APPROACHING' && train.state !== 'CLEARING') {
                 return null;
@@ -1398,16 +1042,18 @@ export default function OperationsCenter({
 
               const isSelected = selectedTrain?.train_id === train.train_id;
               const direction = train.isEastbound ? 'EAST' : 'WEST';
+              const isMoving = isPlaying && train.state === 'IN_TRANSIT';
 
               if (train.isFreight) {
                 return (
-                  <FreightTrain
+                  <CompactFreightTrain
                     key={train.train_id}
                     train={train}
                     x={train.posX}
                     y={trackObj.y}
                     direction={direction}
                     isSelected={isSelected}
+                    isMoving={isMoving}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedTrain(train);
@@ -1418,13 +1064,14 @@ export default function OperationsCenter({
               }
 
               return (
-                <PassengerTrain
+                <CompactPassengerTrain
                   key={train.train_id}
                   train={train}
                   x={train.posX}
                   y={trackObj.y}
                   direction={direction}
                   isSelected={isSelected}
+                  isMoving={isMoving}
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedTrain(train);
@@ -1436,30 +1083,32 @@ export default function OperationsCenter({
           </svg>
         </div>
 
-        {/* 3. SIMULATION PLAYBACK & TIMELINE CONTROLLER DOCK */}
+        {/* 3. SLEEK COMPACT TRANSPORT & TIMELINE CONTROLLER DOCK */}
         <div
           style={{
             background: '#FFFFFF',
             borderTop: '1px solid #E2E8F0',
-            padding: '12px 18px',
+            padding: '10px 14px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '10px',
+            gap: '8px',
           }}
         >
           {/* Controls Button Row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               <button
                 className="btn btn-primary"
                 onClick={() => setIsPlaying((p) => !p)}
                 style={{
-                  minWidth: '105px',
+                  minWidth: '95px',
                   background: isPlaying ? '#DC2626' : '#16A34A',
                   borderColor: isPlaying ? '#B91C1C' : '#15803D',
                   color: '#FFFFFF',
                   fontWeight: '700',
-                  boxShadow: isPlaying ? '0 1px 3px rgba(220,38,38,0.3)' : '0 1px 3px rgba(22,163,74,0.3)',
+                  padding: '5px 12px',
+                  fontSize: '11px',
+                  boxShadow: isPlaying ? '0 1px 3px rgba(220,38,38,0.25)' : '0 1px 3px rgba(22,163,74,0.25)',
                 }}
               >
                 {isPlaying ? '⏸ PAUSE' : '▶ PLAY'}
@@ -1468,17 +1117,17 @@ export default function OperationsCenter({
               <button
                 className="btn btn-secondary"
                 onClick={handleReset}
-                style={{ background: '#F1F5F9', color: '#1E293B', borderColor: '#CBD5E1' }}
+                style={{ background: '#F1F5F9', color: '#1E293B', borderColor: '#CBD5E1', padding: '5px 10px', fontSize: '11px' }}
                 title="Reset simulation to 09:00:00"
               >
                 ↺ RESET
               </button>
 
-              <div style={{ display: 'flex', gap: '4px', marginLeft: '6px' }}>
+              <div style={{ display: 'flex', gap: '3px', marginLeft: '4px' }}>
                 <button
                   className="btn btn-secondary"
                   onClick={() => handleStep(-15)}
-                  style={{ background: '#F1F5F9', color: '#475569', borderColor: '#CBD5E1', fontSize: '11px', padding: '4px 8px' }}
+                  style={{ background: '#F1F5F9', color: '#475569', borderColor: '#CBD5E1', fontSize: '10.5px', padding: '4px 6px' }}
                   title="Jump back 15 minutes"
                 >
                   -15m
@@ -1486,7 +1135,7 @@ export default function OperationsCenter({
                 <button
                   className="btn btn-secondary"
                   onClick={() => handleStep(15)}
-                  style={{ background: '#F1F5F9', color: '#475569', borderColor: '#CBD5E1', fontSize: '11px', padding: '4px 8px' }}
+                  style={{ background: '#F1F5F9', color: '#475569', borderColor: '#CBD5E1', fontSize: '10.5px', padding: '4px 6px' }}
                   title="Jump forward 15 minutes"
                 >
                   +15m
@@ -1495,8 +1144,8 @@ export default function OperationsCenter({
             </div>
 
             {/* Speed Multipliers */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>SPEED:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: '600' }}>SPEED:</span>
               {[1, 2, 4, 8].map((s) => (
                 <button
                   key={s}
@@ -1506,8 +1155,8 @@ export default function OperationsCenter({
                     color: speed === s ? '#FFFFFF' : '#475569',
                     border: '1px solid ' + (speed === s ? '#1D4ED8' : '#CBD5E1'),
                     borderRadius: '2px',
-                    padding: '3px 8px',
-                    fontSize: '11px',
+                    padding: '2px 7px',
+                    fontSize: '10.5px',
                     fontWeight: '700',
                     cursor: 'pointer',
                   }}
@@ -1517,7 +1166,7 @@ export default function OperationsCenter({
               ))}
             </div>
 
-            {/* Quick Manifest Drawer Toggle */}
+            {/* Timetable Drawer Button */}
             <button
               onClick={() => setShowTimetableDrawer((p) => !p)}
               style={{
@@ -1525,32 +1174,34 @@ export default function OperationsCenter({
                 color: showTimetableDrawer ? '#FFFFFF' : '#1E293B',
                 border: '1px solid ' + (showTimetableDrawer ? '#1D4ED8' : '#CBD5E1'),
                 borderRadius: 'var(--radius-xs)',
-                padding: '6px 12px',
-                fontSize: '11.5px',
+                padding: '5px 10px',
+                fontSize: '11px',
                 fontWeight: '600',
                 cursor: 'pointer',
               }}
             >
-              📋 {showTimetableDrawer ? 'HIDE TIMETABLE' : 'SHOW TRAIN TIMETABLE (14)'}
+              📋 {showTimetableDrawer ? 'HIDE MANIFEST' : 'TRAIN MANIFEST (14)'}
             </button>
           </div>
 
-          {/* Scrubbable Timeline Slider */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {/* Timeline Range Slider */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <input
               type="range"
               min={START_MIN}
               max={END_MIN}
+              step="0.5"
               value={simTime}
               onChange={(e) => setSimTime(Number(e.target.value))}
               style={{
                 width: '100%',
                 cursor: 'ew-resize',
                 accentColor: '#0284C7',
+                height: '5px',
               }}
             />
-            {/* Hour Markers */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
+            {/* Timeline Hour Markers */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
               <span>06:00</span>
               <span>08:00</span>
               <span>10:00 (BLK-101)</span>
@@ -1565,21 +1216,18 @@ export default function OperationsCenter({
         </div>
       </div>
 
-      {/* 4. CONTEXTUAL INSPECTION PANELS (Selected Track Section & Selected Train) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-        {/* Panel A: Track Section Asset & Possession Details */}
+      {/* 4. CONTEXTUAL INSPECTION PANELS (Compact 2-Column Grid) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px' }}>
+        {/* Track Section Inspector */}
         <div className="ops-panel">
-          <div className="panel-header">
+          <div className="panel-header" style={{ padding: '8px 14px' }}>
             <div>
-              <div className="panel-title">Track Section Inspector: {selectedTrackInfo?.name}</div>
-              <div style={{ fontSize: '11px', color: 'var(--c-text-secondary)', marginTop: '2px' }}>
-                Physical infrastructure, live occupancy, and maintenance possession status
-              </div>
+              <div className="panel-title" style={{ fontSize: '12px' }}>Track Inspector: {selectedTrackInfo?.name}</div>
             </div>
             <span
               style={{
-                fontSize: '10.5px',
-                padding: '2px 8px',
+                fontSize: '10px',
+                padding: '2px 6px',
                 borderRadius: '2px',
                 fontWeight: '700',
                 background: selectedTrackData.statusColor,
@@ -1590,200 +1238,135 @@ export default function OperationsCenter({
             </span>
           </div>
 
-          <div className="panel-body" style={{ fontSize: '12px', lineHeight: 1.6 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-              <div>
-                <span style={{ color: 'var(--c-text-secondary)' }}>Section Corridor:</span>{' '}
-                <strong>A–B (West Jn ⟷ East Jn)</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--c-text-secondary)' }}>Track Designation:</span>{' '}
-                <strong>{selectedTrackInfo?.type}</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--c-text-secondary)' }}>Signal Interlocking:</span>{' '}
-                <strong>4-Aspect Absolute Automatic Block</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--c-text-secondary)' }}>Electrification OHE:</span>{' '}
-                <strong>25kV AC Mainline Traction</strong>
-              </div>
+          <div className="panel-body" style={{ padding: '10px 14px', fontSize: '11.5px', lineHeight: 1.5 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+              <div><span style={{ color: 'var(--c-text-secondary)' }}>Designation:</span> <strong>{selectedTrackInfo?.type}</strong></div>
+              <div><span style={{ color: 'var(--c-text-secondary)' }}>Signaling:</span> <strong>Automatic Block</strong></div>
+              <div><span style={{ color: 'var(--c-text-secondary)' }}>Traction:</span> <strong>25kV AC Electrified</strong></div>
+              <div><span style={{ color: 'var(--c-text-secondary)' }}>Direction:</span> <strong>{selectedTrackInfo?.dirLabel}</strong></div>
             </div>
 
-            {/* Active Block Info */}
             {selectedTrackData.activeBlock ? (
-              <div
-                style={{
-                  background: '#FEF2F2',
-                  border: '1px solid #FCA5A5',
-                  borderRadius: 'var(--radius-xs)',
-                  padding: '12px',
-                  marginBottom: '10px',
-                }}
-              >
-                <div style={{ fontWeight: '700', color: '#991B1B', marginBottom: '4px' }}>
-                  ACTIVE POSSESSION: {selectedTrackData.activeBlock.block_id}
+              <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 'var(--radius-xs)', padding: '8px 10px' }}>
+                <div style={{ fontWeight: '700', color: '#991B1B', fontSize: '11px' }}>
+                  ACTIVE POSSESSION: {selectedTrackData.activeBlock.block_id} ({selectedTrackData.activeBlock.start_time}–{selectedTrackData.activeBlock.end_time})
                 </div>
-                <div style={{ fontSize: '11.5px', color: '#7F1D1D' }}>
-                  Window: {selectedTrackData.activeBlock.start_time} – {selectedTrackData.activeBlock.end_time} ({selectedTrackData.activeBlock.block_duration}h active possession)
-                </div>
-                <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                <div style={{ display: 'flex', gap: '4px', margin: '4px 0' }}>
                   {selectedTrackData.activeBlock.departments.map((d) => (
                     <DeptBadge key={d} department={d} />
                   ))}
                 </div>
-                <div style={{ marginTop: '8px', borderTop: '1px solid #FECACA', paddingTop: '6px' }}>
-                  <strong>Assigned Maintenance Tasks:</strong>
-                  <ul style={{ margin: '4px 0 0 16px', padding: 0 }}>
-                    {selectedTrackData.activeBlock.tasks.map((t) => (
-                      <li key={t.task_id}>
-                        <code>{t.task_id}</code>: {t.description} ({t.duration}h)
-                      </li>
-                    ))}
-                  </ul>
+                <div style={{ fontSize: '10.5px', color: '#7F1D1D' }}>
+                  {selectedTrackData.activeBlock.tasks.map((t) => t.task_id).join(', ')} ({selectedTrackData.activeBlock.tasks.length} tasks executing simultaneously)
                 </div>
               </div>
             ) : selectedTrackData.upcomingBlock ? (
-              <div
-                style={{
-                  background: '#FFFBEB',
-                  border: '1px solid #FCD34D',
-                  borderRadius: 'var(--radius-xs)',
-                  padding: '10px',
-                  color: '#92400E',
-                }}
-              >
-                <strong>⏱ UPCOMING POSSESSION:</strong> Block {selectedTrackData.upcomingBlock.block_id} starts at {selectedTrackData.upcomingBlock.start_time} ({selectedTrackData.upcomingBlock.departments.join(', ')}).
+              <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 'var(--radius-xs)', padding: '8px 10px', color: '#92400E', fontSize: '11px' }}>
+                ⏱ Upcoming block {selectedTrackData.upcomingBlock.block_id} at {selectedTrackData.upcomingBlock.start_time}.
               </div>
             ) : (
-              <div style={{ padding: '8px 12px', background: 'var(--c-surface-alt)', borderRadius: 'var(--radius-xs)', color: '#166534' }}>
-                ✓ No active possession at {minToTime(simTime)}. Section clear for authorized train operations.
+              <div style={{ padding: '6px 10px', background: 'var(--c-surface-alt)', borderRadius: 'var(--radius-xs)', color: '#166534', fontSize: '11px' }}>
+                ✓ Section clear for authorized movements at {minToTime(simTime)}.
               </div>
             )}
           </div>
         </div>
 
-        {/* Panel B: Selected Train Inspector */}
+        {/* Train Telemetry Inspector */}
         <div className="ops-panel">
-          <div className="panel-header">
+          <div className="panel-header" style={{ padding: '8px 14px' }}>
             <div>
-              <div className="panel-title">
-                Train Inspector: {selectedTrain ? `${selectedTrain.train_id} (${selectedTrain.train_name})` : 'Select a Train on Tracks'}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--c-text-secondary)', marginTop: '2px' }}>
-                Locomotive formation, telemetry, traversal progress, and schedule
+              <div className="panel-title" style={{ fontSize: '12px' }}>
+                Train Inspector: {selectedTrain ? `${selectedTrain.train_id} (${selectedTrain.train_name})` : 'Select Train on Tracks'}
               </div>
             </div>
             {selectedTrain && (
               <button
                 className="btn btn-secondary"
                 onClick={() => setSelectedTrain(null)}
-                style={{ padding: '2px 8px', fontSize: '10px' }}
+                style={{ padding: '1px 6px', fontSize: '10px' }}
               >
                 ✕ Deselect
               </button>
             )}
           </div>
 
-          <div className="panel-body" style={{ fontSize: '12px', lineHeight: 1.6 }}>
+          <div className="panel-body" style={{ padding: '10px 14px', fontSize: '11.5px', lineHeight: 1.5 }}>
             {selectedTrain ? (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                  <div>
-                    <span style={{ color: 'var(--c-text-secondary)' }}>Train ID:</span>{' '}
-                    <strong>{selectedTrain.train_id}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--c-text-secondary)' }}>Service Name:</span>{' '}
-                    <strong>{selectedTrain.train_name}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--c-text-secondary)' }}>Rake Composition:</span>{' '}
-                    <strong>{selectedTrain.isFreight ? 'WAG-9 Freight Loco + 2 Wagons' : 'WAP-7 Electric Loco + 2 LHB Coaches'}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--c-text-secondary)' }}>Assigned Corridor:</span>{' '}
-                    <strong>{selectedTrain.track}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--c-text-secondary)' }}>Direction:</span>{' '}
-                    <strong>{selectedTrain.isEastbound ? 'Eastbound (Station A → Station B)' : 'Westbound (Station B → Station A)'}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--c-text-secondary)' }}>Section Window:</span>{' '}
-                    <strong className="cell-mono">{selectedTrain.arrival_time} – {selectedTrain.departure_time}</strong>
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                  <div><span style={{ color: 'var(--c-text-secondary)' }}>Service:</span> <strong>{selectedTrain.train_name}</strong></div>
+                  <div><span style={{ color: 'var(--c-text-secondary)' }}>Corridor:</span> <strong>{selectedTrain.track}</strong></div>
+                  <div><span style={{ color: 'var(--c-text-secondary)' }}>Schedule:</span> <strong className="cell-mono">{selectedTrain.arrival_time} – {selectedTrain.departure_time}</strong></div>
+                  <div><span style={{ color: 'var(--c-text-secondary)' }}>Rake:</span> <strong>{selectedTrain.isFreight ? 'WAG-9 Freight Rake' : 'WAP-7 + 2 LHB Coaches'}</strong></div>
                 </div>
 
-                <div style={{ background: 'var(--c-surface-alt)', padding: '10px 14px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--c-border-light)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div style={{ background: 'var(--c-surface-alt)', padding: '6px 10px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--c-border-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '10.5px' }}>
                     <span style={{ fontWeight: '600' }}>TRAVERSAL PROGRESS:</span>
                     <span className="cell-mono" style={{ fontWeight: '700', color: '#1D4ED8' }}>
                       {Math.round(selectedTrain.progress * 100)}% ({selectedTrain.state})
                     </span>
                   </div>
-                  <div style={{ width: '100%', height: '8px', background: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: '100%', height: '6px', background: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
                     <div
                       style={{
                         width: `${Math.round(selectedTrain.progress * 100)}%`,
                         height: '100%',
                         background: '#2563EB',
-                        transition: 'width 0.4s ease',
+                        transition: 'width 0.2s ease',
                       }}
                     />
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-text-muted)' }}>
-                Click any passenger locomotive, coach, or freight train on the physical tracks to inspect its formation and telemetry.
+              <div style={{ padding: '16px', textAlign: 'center', color: 'var(--c-text-muted)', fontSize: '11px' }}>
+                Click any moving passenger locomotive, coach, or freight train on the physical tracks to inspect telemetry.
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* 5. COLLAPSIBLE TRAIN TIMETABLE MANIFEST DRAWER */}
+      {/* 5. COLLAPSIBLE TIMETABLE MANIFEST DRAWER */}
       {showTimetableDrawer && (
         <div className="ops-panel anim-slide-in">
-          <div className="panel-header">
+          <div className="panel-header" style={{ padding: '8px 14px' }}>
             <div>
-              <div className="panel-title">Full Network Train Timetable Manifest (Section A–B)</div>
-              <div style={{ fontSize: '11px', color: 'var(--c-text-secondary)', marginTop: '2px' }}>
-                Complete operational schedule for all 14 authorized services on 20 Sep 2026
-              </div>
+              <div className="panel-title" style={{ fontSize: '12px' }}>Full Network Train Timetable Manifest (Section A–B)</div>
             </div>
             <button
               className="btn btn-secondary"
               onClick={() => setShowTimetableDrawer(false)}
-              style={{ padding: '2px 8px', fontSize: '11px' }}
+              style={{ padding: '2px 8px', fontSize: '10.5px' }}
             >
-              ✕ Close Timetable
+              ✕ Close
             </button>
           </div>
 
-          <div className="panel-body">
-            {/* Filter and Search Bar */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '14px', flexWrap: 'wrap' }}>
+          <div className="panel-body" style={{ padding: '10px 14px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
               <input
                 type="text"
-                placeholder="Search train ID or name..."
+                placeholder="Search train..."
                 value={timetableSearch}
                 onChange={(e) => setTimetableSearch(e.target.value)}
                 style={{
-                  padding: '6px 12px',
+                  padding: '4px 10px',
                   border: '1px solid var(--c-border)',
                   borderRadius: 'var(--radius-xs)',
-                  fontSize: '12px',
-                  minWidth: '220px',
+                  fontSize: '11.5px',
+                  minWidth: '180px',
                 }}
               />
-              <div style={{ display: 'flex', gap: '4px' }}>
+              <div style={{ display: 'flex', gap: '3px' }}>
                 {['ALL', 'Track 1', 'Track 2', 'Track 3', 'Track 4'].map((trk) => (
                   <button
                     key={trk}
                     className={`btn-seg ${timetableTrackFilter === trk ? 'active' : ''}`}
                     onClick={() => setTimetableTrackFilter(trk)}
+                    style={{ fontSize: '10.5px', padding: '3px 8px' }}
                   >
                     {trk}
                   </button>
@@ -1791,18 +1374,16 @@ export default function OperationsCenter({
               </div>
             </div>
 
-            {/* Table */}
             <div className="ops-table-container">
-              <table className="ops-table">
+              <table className="ops-table" style={{ fontSize: '11px' }}>
                 <thead>
                   <tr>
                     <th>Train ID</th>
-                    <th>Train Service Name</th>
-                    <th>Assigned Track</th>
+                    <th>Service Name</th>
+                    <th>Track</th>
                     <th>Arrival</th>
                     <th>Departure</th>
-                    <th>Speed Limit</th>
-                    <th>Status at Sim Clock</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1820,23 +1401,16 @@ export default function OperationsCenter({
                           setSelectedTrack(tr.track);
                         }}
                       >
-                        <td className="cell-mono" style={{ fontWeight: '700' }}>
-                          {tr.train_id}
-                        </td>
+                        <td className="cell-mono" style={{ fontWeight: '700' }}>{tr.train_id}</td>
                         <td>{tr.train_name}</td>
-                        <td>
-                          <span className="badge-tag" style={{ background: '#E2E8F0', color: '#1E293B', fontWeight: '600' }}>
-                            {tr.track}
-                          </span>
-                        </td>
+                        <td><span className="badge-tag" style={{ background: '#E2E8F0', color: '#1E293B', fontWeight: '600' }}>{tr.track}</span></td>
                         <td className="cell-mono">{tr.arrival_time}</td>
                         <td className="cell-mono">{tr.departure_time}</td>
-                        <td className="cell-mono">130 km/h</td>
                         <td>
                           <span
                             style={{
-                              fontSize: '10.5px',
-                              padding: '2px 6px',
+                              fontSize: '10px',
+                              padding: '2px 5px',
                               borderRadius: '2px',
                               fontWeight: '700',
                               background:
