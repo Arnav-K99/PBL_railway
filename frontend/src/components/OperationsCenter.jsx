@@ -34,27 +34,34 @@ export default function OperationsCenter({
   // Active blocks from scheduler
   const scheduledBlocks = scheduleResult?.blocks || [];
 
-  // Continuous animation loop for train transit
+  // Continuous smooth animation loop for train transit
   useEffect(() => {
+    let animId;
+    let lastTime = null;
+
     const loop = (timestamp) => {
-      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
-      const dt = (timestamp - lastTimeRef.current) / 1000;
-      lastTimeRef.current = timestamp;
+      if (lastTime === null) {
+        lastTime = timestamp;
+      }
+      const rawDt = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+      // Clamp dt to avoid big jumps when tab pauses or wakes up
+      const dt = Math.min(rawDt, 0.05);
 
       if (isPlaying) {
         setProgress((prev) => {
-          // Complete full circuit in ~14 seconds at 1x
-          const rate = 7.0 * speedMultiplier;
+          // Smooth 12-second transit across Panipat Yard
+          const rate = 8.33 * speedMultiplier;
           const nextVal = prev + rate * dt;
-          return nextVal > 100 ? 0 : nextVal;
+          return nextVal >= 100 ? 0 : nextVal;
         });
       }
-      animFrameRef.current = requestAnimationFrame(loop);
+      animId = requestAnimationFrame(loop);
     };
 
-    animFrameRef.current = requestAnimationFrame(loop);
+    animId = requestAnimationFrame(loop);
     return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      cancelAnimationFrame(animId);
     };
   }, [isPlaying, speedMultiplier]);
 
@@ -565,7 +572,6 @@ export default function OperationsCenter({
                 --------------------------------------------------------------- */}
             <g
               transform={`translate(${trainPos.x}, ${trainPos.y}) rotate(${trainPos.angle})`}
-              style={{ transition: 'transform 0.05s linear' }}
             >
               {/* Outer Shadow Capsule */}
               <rect
