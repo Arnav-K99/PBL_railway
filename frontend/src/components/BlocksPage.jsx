@@ -252,6 +252,39 @@ export default function BlocksPage({ scheduledBlocks = [], onGeneratePlan, loadi
                   </div>
                 </div>
 
+                {/* Algorithmic Reward & Optimization Card */}
+                <div
+                  style={{
+                    background: '#F0FDF4',
+                    border: '1px solid #BBF7D0',
+                    borderRadius: '12px',
+                    padding: '12px 18px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#047857', fontWeight: '800' }}>
+                      LEXICOGRAPHIC REWARD YIELD · R(B) = 120 × T_B + 8 × C_B − 1
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#065F46', marginTop: '2px' }}>
+                      Task Coverage: <strong>+{120 * selectedBlock.tasks.length}</strong> ({selectedBlock.tasks.length} tasks) · 
+                      Dept Clubbing: <strong>+{8 * Math.max(0, selectedBlock.departments.length - 1)}</strong> ({Math.max(0, selectedBlock.departments.length - 1)} extra depts) · 
+                      Block Economy: <strong>−1</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#047857', fontWeight: '700' }}>Block Score</div>
+                    <div style={{ fontSize: '18px', fontWeight: '900', color: '#059669', fontFamily: 'var(--font-mono)' }}>
+                      {120 * selectedBlock.tasks.length + 8 * Math.max(0, selectedBlock.departments.length - 1) - 1} pts
+                    </div>
+                  </div>
+                </div>
+
                 {/* List of Tasks Working Under It */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>

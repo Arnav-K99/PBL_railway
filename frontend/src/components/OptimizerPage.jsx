@@ -288,7 +288,12 @@ export default function OptimizerPage({
                         <div className="compact-block-title">
                           {blk.block_id} &nbsp;·&nbsp; {blk.track || 'Track 1'}
                         </div>
-                        <StatusBadge status="Scheduled" label="Scheduled" />
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <span style={{ fontSize: '10px', background: '#DCFCE7', color: '#15803D', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', fontFamily: 'var(--font-mono)' }}>
+                            R = {120 * blk.tasks.length + 8 * Math.max(0, (blk.departments?.length || 1) - 1) - 1} pts
+                          </span>
+                          <StatusBadge status="Scheduled" label="Scheduled" />
+                        </div>
                       </div>
 
                       <div className="compact-block-body">
