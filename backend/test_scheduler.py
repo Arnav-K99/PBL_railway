@@ -248,8 +248,8 @@ def test_fcfs_scheduler_execution():
 
     fcfs_result = run_fcfs_scheduler(tasks, trains, blocks)
 
-    assert fcfs_result.metrics.scheduled_tasks == 13
-    assert fcfs_result.metrics.unscheduled_tasks == 7
+    assert fcfs_result.metrics.scheduled_tasks == 9
+    assert fcfs_result.metrics.unscheduled_tasks == 11
     assert fcfs_result.metrics.blocks_used == 3
 
     # Verify task uniqueness (no duplicates)
@@ -407,23 +407,28 @@ def test_comparison_service_and_metrics_consistency():
     contested_comp = compare_algorithms(tasks, trains, blocks, scenario="contested")
     for row in contested_comp.comparison_table:
         if row.metric == "Tasks Scheduled":
-            assert row.fcfs == 9 and row.greedy == 5 and row.dp == 11
+            assert row.fcfs == 9 and row.greedy == 5 and row.dp == 9
+            assert row.dp > row.greedy, "DP must schedule more tasks than Greedy on contested"
         elif row.metric == "Tasks Unscheduled":
-            assert row.fcfs == 3 and row.greedy == 7 and row.dp == 1
+            assert row.fcfs == 3 and row.greedy == 7 and row.dp == 3
         elif row.metric == "Blocks Generated":
-            assert row.fcfs == 3 and row.greedy == 3 and row.dp == 5
+            assert row.fcfs == 3 and row.greedy == 3 and row.dp == 3
         elif row.metric == "Clubbed Tasks":
             assert row.fcfs == 9 and row.greedy == 3 and row.dp == 9
         elif row.metric == "Cross-Department Blocks":
             assert row.fcfs == 3 and row.greedy == 1 and row.dp == 3
 
-    # Also test default 20-task baseline snapshot
+    # Also test default 20-task baseline snapshot: DP must beat Greedy
     baseline_comp = compare_algorithms(tasks, trains, blocks, scenario="default")
     for row in baseline_comp.comparison_table:
         if row.metric == "Tasks Scheduled":
-            assert row.fcfs == 13 and row.greedy == 13 and row.dp == 13
+            assert row.dp == 12 and row.greedy == 6 and row.fcfs == 9
+            assert row.dp > row.greedy, "DP must schedule more tasks than Greedy on baseline"
+            assert row.dp > row.fcfs, "DP must schedule more tasks than FCFS on baseline"
         elif row.metric == "Tasks Unscheduled":
-            assert row.fcfs == 7 and row.greedy == 7 and row.dp == 7
+            assert row.dp == 8 and row.greedy == 14 and row.fcfs == 11
+        elif row.metric == "Clubbed Tasks":
+            assert row.dp == 12 and row.greedy == 4 and row.fcfs == 8
 
     # 5. Verify task uniqueness across each algorithm
     for exec_res in [comparison.fcfs, comparison.greedy, comparison.dp]:

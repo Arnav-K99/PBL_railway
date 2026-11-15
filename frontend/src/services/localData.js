@@ -1,35 +1,35 @@
 // Client-side fallback service for standalone / Netlify hosting
 export const DEFAULT_TASKS = [
-  { task_id: 'T001', department: 'Engineering', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '09:00', latest_end: '11:30', duration: 2.0, arrival_time: '06:00', description: 'Deep screening and ballast tamping' },
-  { task_id: 'T002', department: 'Signal & Telecom', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '09:15', latest_end: '11:00', duration: 1.5, arrival_time: '06:04', description: 'Point machine testing and track circuit renewal' },
-  { task_id: 'T003', department: 'Traction', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '09:30', latest_end: '11:45', duration: 2.0, arrival_time: '06:08', description: 'OHE contact wire inspection and bracket overhaul' },
-  { task_id: 'T004', department: 'Engineering', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '10:00', latest_end: '11:30', duration: 1.0, arrival_time: '06:12', description: 'Rail fracture ultrasonic testing' },
-  { task_id: 'T005', department: 'Engineering', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '13:00', latest_end: '15:30', duration: 2.5, arrival_time: '06:16', description: 'Sleeper renewal and turnout realignment' },
-  { task_id: 'T006', department: 'Signal & Telecom', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '13:15', latest_end: '15:00', duration: 1.5, arrival_time: '06:20', description: 'Signal interlocking and axle counter testing' },
-  { task_id: 'T007', department: 'Traction', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '13:30', latest_end: '15:30', duration: 2.0, arrival_time: '06:24', description: 'Catenary wire tension adjustment' },
-  { task_id: 'T008', department: 'Engineering', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '15:00', latest_end: '17:30', duration: 2.5, arrival_time: '06:28', description: 'Bridge girder painting and track greasing' },
-  { task_id: 'T009', department: 'Signal & Telecom', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '15:30', latest_end: '17:00', duration: 1.5, arrival_time: '06:32', description: 'Electronic interlocking diagnostics' },
-  { task_id: 'T010', department: 'Traction', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '15:00', latest_end: '17:00', duration: 2.0, arrival_time: '06:36', description: 'Substation feeder breaker testing' },
+  { task_id: 'T001', department: 'Engineering', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '08:30', latest_end: '10:00', duration: 1.5, arrival_time: '06:10', description: 'Rail fracture ultrasonic testing and flaw probe' },
+  { task_id: 'T002', department: 'Signal & Telecom', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '09:30', latest_end: '11:30', duration: 2.0, arrival_time: '06:15', description: 'Point machine testing and track circuit renewal' },
+  { task_id: 'T003', department: 'Traction', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '09:45', latest_end: '12:45', duration: 3.0, arrival_time: '06:20', description: 'OHE contact wire inspection and bracket overhaul' },
+  { task_id: 'T004', department: 'Engineering', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '10:00', latest_end: '12:30', duration: 2.5, arrival_time: '06:25', description: 'Deep screening and ballast tamping' },
+  { task_id: 'T005', department: 'Engineering', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '12:30', latest_end: '15:30', duration: 3.0, arrival_time: '06:40', description: 'Sleeper renewal and turnout realignment' },
+  { task_id: 'T006', department: 'Signal & Telecom', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '12:45', latest_end: '14:45', duration: 2.0, arrival_time: '06:45', description: 'Signal interlocking and axle counter testing' },
+  { task_id: 'T007', department: 'Traction', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '13:00', latest_end: '15:30', duration: 2.5, arrival_time: '06:50', description: 'Catenary wire tension adjustment' },
+  { task_id: 'T008', department: 'Engineering', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '15:00', latest_end: '17:30', duration: 2.5, arrival_time: '07:00', description: 'Bridge girder painting and track greasing' },
+  { task_id: 'T009', department: 'Signal & Telecom', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '15:30', latest_end: '17:00', duration: 1.5, arrival_time: '07:05', description: 'Electronic interlocking diagnostics' },
+  { task_id: 'T010', department: 'Traction', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '15:00', latest_end: '17:00', duration: 2.0, arrival_time: '07:10', description: 'Substation feeder breaker testing' },
   { task_id: 'T011', department: 'Engineering', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '14:00', latest_end: '16:30', duration: 2.0, arrival_time: '06:40', description: 'Rail weld grinding' },
   { task_id: 'T012', department: 'Signal & Telecom', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '14:30', latest_end: '16:00', duration: 1.5, arrival_time: '06:44', description: 'Level crossing gate signal calibration' },
-  { task_id: 'T013', department: 'Traction', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '08:30', latest_end: '10:30', duration: 2.0, arrival_time: '06:48', description: 'Isolator switch maintenance' },
+  { task_id: 'T013', department: 'Traction', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '11:00', latest_end: '12:30', duration: 1.5, arrival_time: '06:35', description: 'Isolator switch maintenance' },
   { task_id: 'T014', department: 'Engineering', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '10:00', latest_end: '12:30', duration: 2.0, arrival_time: '06:52', description: 'Curve rail realignment' },
   { task_id: 'T015', department: 'Engineering', section: 'Track 4', track: 'Track 4', date: '2026-09-20', earliest_start: '10:00', latest_end: '12:00', duration: 2.0, arrival_time: '06:56', description: 'Track geometry inspection' },
   { task_id: 'T016', department: 'Signal & Telecom', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '18:00', latest_end: '20:30', duration: 2.0, arrival_time: '07:00', description: 'Signal relay room wiring audit' },
-  { task_id: 'T017', department: 'Traction', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '09:00', latest_end: '10:30', duration: 1.5, arrival_time: '07:04', description: 'Neutral section inspection' },
-  { task_id: 'T018', department: 'Engineering', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '14:00', latest_end: '15:30', duration: 1.5, arrival_time: '07:08', description: 'Switch expansion joint adjustment' },
-  { task_id: 'T019', department: 'Signal & Telecom', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '16:00', latest_end: '17:30', duration: 1.5, arrival_time: '07:12', description: 'Audio frequency track circuit check' },
+  { task_id: 'T017', department: 'Traction', section: 'Track 1', track: 'Track 1', date: '2026-09-20', earliest_start: '10:30', latest_end: '12:00', duration: 1.5, arrival_time: '06:30', description: 'Neutral section inspection' },
+  { task_id: 'T018', department: 'Engineering', section: 'Track 2', track: 'Track 2', date: '2026-09-20', earliest_start: '13:30', latest_end: '15:30', duration: 2.0, arrival_time: '06:55', description: 'Switch expansion joint adjustment' },
+  { task_id: 'T019', department: 'Signal & Telecom', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '16:00', latest_end: '17:30', duration: 1.5, arrival_time: '07:15', description: 'Audio frequency track circuit check' },
   { task_id: 'T020', department: 'Traction', section: 'Track 3', track: 'Track 3', date: '2026-09-20', earliest_start: '23:00', latest_end: '01:00', duration: 2.0, arrival_time: '07:16', description: 'Emergency tower wagon run' },
 ];
 
 export const DEFAULT_TRAINS = [
   { train_id: 'TR-12001', train_name: 'Shatabdi Express', section: 'Track 1', track: 'Track 1', date: '2026-09-20', arrival_time: '07:15', departure_time: '07:45' },
-  { train_id: 'TR-12003', train_name: 'Gomti Express', section: 'Track 1', track: 'Track 1', date: '2026-09-20', arrival_time: '08:10', departure_time: '08:40' },
-  { train_id: 'TR-22436', train_name: 'Vande Bharat Express', section: 'Track 1', track: 'Track 1', date: '2026-09-20', arrival_time: '15:10', departure_time: '15:40' },
+  { train_id: 'TR-12003', train_name: 'Gomti Express', section: 'Track 1', track: 'Track 1', date: '2026-09-20', arrival_time: '07:50', departure_time: '08:20' },
+  { train_id: 'TR-22436', train_name: 'Vande Bharat Express', section: 'Track 1', track: 'Track 1', date: '2026-09-20', arrival_time: '14:15', departure_time: '14:45' },
   { train_id: 'TR-12951', train_name: 'Rajdhani Express', section: 'Track 1', track: 'Track 1', date: '2026-09-20', arrival_time: '16:15', departure_time: '16:45' },
   { train_id: 'TR-GOODS-01', train_name: 'Container Freight 701', section: 'Track 1', track: 'Track 1', date: '2026-09-20', arrival_time: '19:30', departure_time: '20:15' },
   { train_id: 'TR-12423', train_name: 'Dibrugarh Rajdhani', section: 'Track 2', track: 'Track 2', date: '2026-09-20', arrival_time: '09:15', departure_time: '09:45' },
-  { train_id: 'TR-14055', train_name: 'Brahmaputra Mail', section: 'Track 2', track: 'Track 2', date: '2026-09-20', arrival_time: '11:15', departure_time: '11:50' },
+  { train_id: 'TR-14055', train_name: 'Brahmaputra Mail', section: 'Track 2', track: 'Track 2', date: '2026-09-20', arrival_time: '10:00', departure_time: '10:35' },
   { train_id: 'TR-12056', train_name: 'Dehradun Jan Shatabdi', section: 'Track 2', track: 'Track 2', date: '2026-09-20', arrival_time: '18:15', departure_time: '18:45' },
   { train_id: 'TR-12301', train_name: 'Howrah Rajdhani', section: 'Track 2', track: 'Track 2', date: '2026-09-20', arrival_time: '19:40', departure_time: '20:15' },
   { train_id: 'TR-12296', train_name: 'Sanghamitra Express', section: 'Track 3', track: 'Track 3', date: '2026-09-20', arrival_time: '10:30', departure_time: '11:00' },
@@ -40,11 +40,11 @@ export const DEFAULT_TRAINS = [
 ];
 
 export const DEFAULT_AVAILABLE_BLOCKS = [
-  { block_id: 'BLK-101', section: 'Track 1', track: 'Track 1', date: '2026-09-20', start_time: '09:00', end_time: '12:00' },
-  { block_id: 'BLK-102', section: 'Track 1', track: 'Track 1', date: '2026-09-20', start_time: '14:00', end_time: '17:00' },
-  { block_id: 'BLK-103', section: 'Track 2', track: 'Track 2', date: '2026-09-20', start_time: '08:00', end_time: '11:00' },
-  { block_id: 'BLK-104', section: 'Track 2', track: 'Track 2', date: '2026-09-20', start_time: '13:00', end_time: '16:00' },
-  { block_id: 'BLK-105', section: 'Track 3', track: 'Track 3', date: '2026-09-20', start_time: '10:00', end_time: '13:00' },
+  { block_id: 'BLK-101', section: 'Track 1', track: 'Track 1', date: '2026-09-20', start_time: '08:30', end_time: '10:15' },
+  { block_id: 'BLK-102', section: 'Track 1', track: 'Track 1', date: '2026-09-20', start_time: '09:30', end_time: '13:30' },
+  { block_id: 'BLK-103', section: 'Track 2', track: 'Track 2', date: '2026-09-20', start_time: '11:00', end_time: '12:45' },
+  { block_id: 'BLK-104', section: 'Track 2', track: 'Track 2', date: '2026-09-20', start_time: '12:00', end_time: '16:00' },
+  { block_id: 'BLK-105', section: 'Track 3', track: 'Track 3', date: '2026-09-20', start_time: '09:00', end_time: '11:30' },
   { block_id: 'BLK-106', section: 'Track 3', track: 'Track 3', date: '2026-09-20', start_time: '15:00', end_time: '18:00' },
   { block_id: 'BLK-107', section: 'Track 1', track: 'Track 1', date: '2026-09-20', start_time: '18:00', end_time: '21:00' },
 ];
@@ -671,76 +671,79 @@ export function runLocalDPScheduler(
     }
   }
 
-  // 1. Sort candidate intervals by finish time (end_min)
-  const sortedCandidates = mergeSort(feasibleCandidates, (c) => c.end_min);
-  const n = sortedCandidates.length;
+  // Group feasible candidates by track to solve independent physical track possessions
+  const tracks = [...new Set(feasibleCandidates.map((c) => c.track))].sort();
+  const selectedCandidates = [];
+  let stepNum = 1;
 
-  // 2. Compute predecessor array p(i) (1-indexed) with track compatibility + task disjointness
-  const p = new Array(n + 1).fill(0);
-  for (let i = 1; i <= n; i++) {
-    const candI = sortedCandidates[i - 1];
-    for (let j = i - 1; j >= 1; j--) {
-      const candJ = sortedCandidates[j - 1];
-      const isTimeCompat = candJ.track !== candI.track || candJ.end_min <= candI.start_min;
-      const isTasksDisjoint = candI.tasks.every(
-        (ti) => !candJ.tasks.some((tj) => tj.task_id === ti.task_id)
-      );
-      if (isTimeCompat && isTasksDisjoint) {
-        p[i] = j;
-        break;
+  for (const trk of tracks) {
+    const trackCands = feasibleCandidates.filter((c) => c.track === trk);
+    const sortedTrackCands = mergeSort(trackCands, (c) => c.end_min);
+    const m = sortedTrackCands.length;
+
+    // Compute predecessor array p(i) for this track
+    const p = new Array(m + 1).fill(0);
+    for (let i = 1; i <= m; i++) {
+      const candI = sortedTrackCands[i - 1];
+      for (let j = i - 1; j >= 1; j--) {
+        const candJ = sortedTrackCands[j - 1];
+        if (candJ.end_min <= candI.start_min) {
+          p[i] = j;
+          break;
+        }
       }
     }
-  }
 
-  // 3. Bellman Recurrence: DP[i] = max(DP[i - 1], W(i) + DP[p(i)])
-  const dp = new Array(n + 1).fill(0.0);
-  const take = new Array(n + 1).fill(false);
+    // Bellman Recurrence: DP[i] = max(DP[i - 1], W(i) + DP[p(i)])
+    const dp = new Array(m + 1).fill(0.0);
+    const take = new Array(m + 1).fill(false);
 
-  for (let i = 1; i <= n; i++) {
-    const weightI = sortedCandidates[i - 1].weight;
-    const includeVal = weightI + dp[p[i]];
-    const excludeVal = dp[i - 1];
+    for (let i = 1; i <= m; i++) {
+      const weightI = sortedTrackCands[i - 1].weight;
+      const includeVal = weightI + dp[p[i]];
+      const excludeVal = dp[i - 1];
 
-    if (includeVal > excludeVal) {
-      dp[i] = includeVal;
-      take[i] = true;
-    } else {
-      dp[i] = excludeVal;
-      take[i] = false;
+      if (includeVal > excludeVal) {
+        dp[i] = includeVal;
+        take[i] = true;
+      } else {
+        dp[i] = excludeVal;
+        take[i] = false;
+      }
     }
-  }
 
-  // Generate decision steps for candidate intervals and recurrence evaluations
-  let stepNum = 1;
-  for (let i = 1; i <= n; i++) {
-    const cand = sortedCandidates[i - 1];
-    const predIdx = p[i];
-    const predDesc = predIdx > 0 ? `p(${i}) = ${sortedCandidates[predIdx - 1].block_id}` : `p(${i}) = None (0)`;
-    const isTaken = take[i];
+    // Generate decision steps for this track
+    for (let i = 1; i <= m; i++) {
+      const cand = sortedTrackCands[i - 1];
+      const predIdx = p[i];
+      const predDesc = predIdx > 0 ? `p(${i}) = ${sortedTrackCands[predIdx - 1].block_id}` : `p(${i}) = None (0)`;
+      const isTaken = take[i];
 
-    decisionSteps.push({
-      step_number: stepNum++,
-      entity_id: cand.block_id,
-      key_attribute: `Interval: ${cand.start_time}-${cand.end_time} (${cand.track})`,
-      action: 'DP_RECURRENCE_EVAL',
-      block_id: cand.block_id,
-      state_detail: `DP[${i}]=${dp[i].toLocaleString()} | ${predDesc}`,
-      rationale: `W(i)=${cand.weight.toLocaleString()} (${cand.tasks.length} tasks, ${cand.departments.length} depts). Include: ${(cand.weight + dp[predIdx]).toLocaleString()} vs Exclude: ${dp[i - 1].toLocaleString()} -> ${isTaken ? 'ACCEPTED' : 'REJECTED'}`,
-    });
-  }
-
-  // 4. Backtracking Reconstruction
-  const selectedCandidates = [];
-  let curr = n;
-  while (curr > 0) {
-    if (take[curr]) {
-      selectedCandidates.push(sortedCandidates[curr - 1]);
-      curr = p[curr];
-    } else {
-      curr = curr - 1;
+      decisionSteps.push({
+        step_number: stepNum++,
+        entity_id: cand.block_id,
+        key_attribute: `Interval: ${cand.start_time}-${cand.end_time} (${cand.track})`,
+        action: 'DP_RECURRENCE_EVAL',
+        block_id: cand.block_id,
+        state_detail: `DP[${i}]=${dp[i].toLocaleString()} | ${predDesc}`,
+        rationale: `Track ${trk} subproblem: W(i)=${cand.weight.toLocaleString()} (${cand.tasks.length} tasks, ${cand.departments.length} depts). Include: ${(cand.weight + dp[predIdx]).toLocaleString()} vs Exclude: ${dp[i - 1].toLocaleString()} -> ${isTaken ? 'ACCEPTED' : 'REJECTED'}`,
+      });
     }
+
+    // Backtrack on this track
+    const trackSel = [];
+    let curr = m;
+    while (curr > 0) {
+      if (take[curr]) {
+        trackSel.push(sortedTrackCands[curr - 1]);
+        curr = p[curr];
+      } else {
+        curr = curr - 1;
+      }
+    }
+    trackSel.reverse();
+    selectedCandidates.push(...trackSel);
   }
-  selectedCandidates.reverse();
 
   // 5. Enforce Task Uniqueness (Set Packing constraint)
   const scheduledTaskIds = new Set();

@@ -243,39 +243,42 @@ def run_dp_scheduler(
             )
             feasible_candidates.append(cand)
 
-    # Sort feasible candidates by finish time for DP processing
-    sorted_candidates = merge_sort(feasible_candidates, key_fn=lambda c: c.end_min)
-
-    # Execute Weighted Interval Scheduling DP
-    selected_candidates, dp_table, p_array, take_array = run_dp_weighted_interval_scheduling(
-        sorted_candidates
-    )
-
-    # Generate Decision Steps for Candidate Intervals and Recurrence
+    # Group feasible candidates by track/section to solve independent physical track possessions
+    # Each physical track is a 1D Weighted Interval Scheduling problem.
+    tracks = sorted(list(dict.fromkeys(c.track for c in feasible_candidates)))
+    selected_candidates: List[CandidateBlock] = []
     step_num = 1
-    for i in range(1, len(sorted_candidates) + 1):
-        cand = sorted_candidates[i - 1]
-        pred_idx = p_array[i]
-        pred_desc = f"p({i}) = {sorted_candidates[pred_idx - 1].block_id}" if pred_idx > 0 else f"p({i}) = None (0)"
-        weight_val = cand.weight
-        is_taken = take_array[i]
 
-        decision_steps.append(
-            DecisionStep(
-                step_number=step_num,
-                entity_id=cand.block_id,
-                key_attribute=f"Interval: {cand.start_time}-{cand.end_time} ({cand.track})",
-                action="DP_RECURRENCE_EVAL",
-                block_id=cand.block_id,
-                state_detail=f"DP[{i}]={dp_table[i]:,.0f} | {pred_desc}",
-                rationale=(
-                    f"W(i)={weight_val:,.0f} ({len(cand.tasks)} tasks, {len(cand.departments)} depts). "
-                    f"Include: W(i)+DP[p(i)]={weight_val + dp_table[pred_idx]:,.0f} vs Exclude: DP[{i-1}]={dp_table[i-1]:,.0f} -> "
-                    f"{'ACCEPTED' if is_taken else 'REJECTED'}"
-                ),
+    for trk in tracks:
+        track_cands = [c for c in feasible_candidates if c.track == trk]
+        sorted_track_cands = merge_sort(track_cands, key_fn=lambda c: c.end_min)
+        sel_cands, dp_tbl, p_arr, tk_arr = run_dp_weighted_interval_scheduling(sorted_track_cands)
+        selected_candidates.extend(sel_cands)
+
+        # Generate Decision Steps for this track's recurrence
+        for i in range(1, len(sorted_track_cands) + 1):
+            cand = sorted_track_cands[i - 1]
+            pred_idx = p_arr[i]
+            pred_desc = f"p({i}) = {sorted_track_cands[pred_idx - 1].block_id}" if pred_idx > 0 else f"p({i}) = None (0)"
+            weight_val = cand.weight
+            is_taken = tk_arr[i]
+
+            decision_steps.append(
+                DecisionStep(
+                    step_number=step_num,
+                    entity_id=cand.block_id,
+                    key_attribute=f"Interval: {cand.start_time}-{cand.end_time} ({cand.track})",
+                    action="DP_RECURRENCE_EVAL",
+                    block_id=cand.block_id,
+                    state_detail=f"DP[{i}]={dp_tbl[i]:,.0f} | {pred_desc}",
+                    rationale=(
+                        f"Track {trk} subproblem: W(i)={weight_val:,.0f} ({len(cand.tasks)} tasks, {len(cand.departments)} depts). "
+                        f"Include: W(i)+DP[p(i)]={weight_val + dp_tbl[pred_idx]:,.0f} vs Exclude: DP[{i-1}]={dp_tbl[i-1]:,.0f} -> "
+                        f"{'ACCEPTED' if is_taken else 'REJECTED'}"
+                    ),
+                )
             )
-        )
-        step_num += 1
+            step_num += 1
 
     # Enforce Task Uniqueness (Set Packing constraint)
     # A maintenance task must not be assigned to multiple selected blocks.

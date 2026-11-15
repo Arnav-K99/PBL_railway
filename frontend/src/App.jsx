@@ -131,6 +131,29 @@ export default function App() {
     });
   };
 
+  // Handle raising a new maintenance requisition from MaintenancePage
+  const handleAddTask = async (newTask) => {
+    try {
+      setTasks((prev) => [newTask, ...prev]);
+
+      // Attempt to save to backend
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask),
+      });
+
+      // Regenerate plan with updated task list
+      handleGeneratePlan();
+    } catch {
+      // Local fallback
+      const updatedTasks = [newTask, ...tasks];
+      setTasks(updatedTasks);
+      const localSched = runLocalGreedyScheduler(updatedTasks, trains, availableBlocks);
+      setScheduleResult(localSched);
+    }
+  };
+
   // Run batch greedy scheduler
   const handleGeneratePlan = async () => {
     try {
@@ -221,6 +244,7 @@ export default function App() {
             <MaintenancePage
               tasks={tasks}
               scheduledTaskIds={scheduledTaskIds}
+              onAddTask={handleAddTask}
             />
           )}
 

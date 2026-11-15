@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 from typing import List, Optional, Dict
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -79,6 +80,43 @@ def get_tasks():
         return load_maintenance_tasks()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/tasks", response_model=MaintenanceTask)
+def create_maintenance_task(task: MaintenanceTask):
+    """
+    Registers a new track possession request from Engineering, S&T, or Traction.
+    Persists to data store and invalidates active schedule cache.
+    """
+    global CURRENT_SCHEDULE
+    try:
+        data_dir = os.path.join(os.path.dirname(__file__), "data")
+        csv_path = os.path.join(data_dir, "maintenance_tasks.csv")
+        file_exists = os.path.exists(csv_path)
+
+        with open(csv_path, mode="a", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            if not file_exists:
+                writer.writerow([
+                    "task_id", "department", "section", "track", "date",
+                    "earliest_start", "latest_end", "duration", "description"
+                ])
+            writer.writerow([
+                task.task_id,
+                task.department,
+                task.section or task.track,
+                task.track,
+                task.date,
+                task.earliest_start,
+                task.latest_end,
+                task.duration,
+                task.description,
+            ])
+
+        CURRENT_SCHEDULE = None
+        return task
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save maintenance task: {str(e)}")
 
 
 @app.get("/api/trains", response_model=List[TrainSchedule])

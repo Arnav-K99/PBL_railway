@@ -1,11 +1,11 @@
 train_id,train_name,section,track,date,arrival_time,departure_time
 TR-12001,Shatabdi Express,Track 1,Track 1,2026-09-20,07:15,07:45
-TR-12003,Gomti Express,Track 1,Track 1,2026-09-20,08:10,08:40
-TR-22436,Vande Bharat Express,Track 1,Track 1,2026-09-20,15:10,15:40
+TR-12003,Gomti Express,Track 1,Track 1,2026-09-20,07:50,08:20
+TR-22436,Vande Bharat Express,Track 1,Track 1,2026-09-20,14:15,14:45
 TR-12951,Rajdhani Express,Track 1,Track 1,2026-09-20,16:15,16:45
 TR-GOODS-01,Container Freight 701,Track 1,Track 1,2026-09-20,19:30,20:15
 TR-12423,Dibrugarh Rajdhani,Track 2,Track 2,2026-09-20,09:15,09:45
-TR-14055,Brahmaputra Mail,Track 2,Track 2,2026-09-20,11:15,11:50
+TR-14055,Brahmaputra Mail,Track 2,Track 2,2026-09-20,10:00,10:35
 TR-12056,Dehradun Jan Shatabdi,Track 2,Track 2,2026-09-20,18:15,18:45
 TR-12301,Howrah Rajdhani,Track 2,Track 2,2026-09-20,19:40,20:15
 TR-12296,Sanghamitra Express,Track 3,Track 3,2026-09-20,10:30,11:00
