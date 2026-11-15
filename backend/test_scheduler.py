@@ -388,17 +388,17 @@ def test_comparison_service_and_metrics_consistency():
     # 4. Verify exact values on Part 7 showcase benchmark
     for row in table:
         if row.metric == "Tasks Scheduled":
-            assert row.fcfs == 2 and row.greedy == 2 and row.dp == 6
-            assert row.dp > row.greedy, "DP must schedule more tasks than Greedy on showcase"
-            assert row.dp > row.fcfs, "DP must schedule more tasks than FCFS on showcase"
+            assert row.fcfs == 2 and row.greedy == 3 and row.dp == 7
+            assert row.dp > row.greedy > row.fcfs, "Hierarchy must be FCFS < Greedy < DP on showcase"
         elif row.metric == "Tasks Unscheduled":
-            assert row.fcfs == 8 and row.greedy == 8 and row.dp == 4
+            assert row.fcfs == 9 and row.greedy == 8 and row.dp == 4
+            assert row.fcfs > row.greedy > row.dp, "Unscheduled must be FCFS > Greedy > DP"
         elif row.metric == "Blocks Generated":
             assert row.fcfs == 2 and row.greedy == 1 and row.dp == 4
         elif row.metric == "Clubbed Tasks":
-            assert row.fcfs == 0 and row.greedy == 2 and row.dp == 3
+            assert row.fcfs == 0 and row.greedy == 3 and row.dp == 5
         elif row.metric == "Cross-Department Blocks":
-            assert row.fcfs == 0 and row.greedy == 1 and row.dp == 1
+            assert row.fcfs == 0 and row.greedy == 1 and row.dp == 2
 
     # Also test contested multi-corridor stress scenario
     contested_comp = compare_algorithms(tasks, trains, blocks, scenario="contested")
@@ -511,10 +511,11 @@ def test_contested_scenario_divergence():
 def test_showcase_scenario_deterministic_metrics():
     """
     Part 7 Critical Verification: Controlled Algorithm Showcase Scenario (Section A-B)
-    Verifies that the real algorithmic execution yields the exact required metrics:
-    - FCFS: 2 scheduled, 8 unscheduled, 2 blocks, 61.1% util, 0 clubbed, 0 cross-dept
-    - Greedy: 2 scheduled, 8 unscheduled, 1 block, 100.0% util, 2 clubbed, 1 cross-dept
-    - DP: 6 scheduled, 4 unscheduled, 4 blocks, 66.7% util, 3 clubbed, 1 cross-dept
+    Verifies that real algorithmic execution yields the exact hierarchy:
+    FCFS < Greedy < DP+backtracking
+    - FCFS: 2 scheduled, 9 unscheduled, 2 blocks, 61.1% util, 0 clubbed, 0 cross-dept
+    - Greedy: 3 scheduled, 8 unscheduled, 1 block, 100.0% util, 3 clubbed, 1 cross-dept
+    - DP: 7 scheduled, 4 unscheduled, 4 blocks, 66.7% util, 5 clubbed, 2 cross-dept
     """
     tasks = load_maintenance_tasks()
     trains = load_train_schedule()
@@ -522,42 +523,47 @@ def test_showcase_scenario_deterministic_metrics():
 
     showcase = compare_algorithms(tasks, trains, blocks, scenario="showcase")
     assert showcase.scenario_id == "showcase"
-    assert showcase.total_input_tasks == 10
+    assert showcase.total_input_tasks == 11
     assert showcase.total_available_corridors == 1
 
     # FCFS: selects B and C
     assert showcase.fcfs.metrics.tasks_scheduled == 2
-    assert showcase.fcfs.metrics.tasks_unscheduled == 8
+    assert showcase.fcfs.metrics.tasks_unscheduled == 9
     assert showcase.fcfs.metrics.blocks_generated == 2
     assert showcase.fcfs.metrics.block_utilization_pct == 61.1
     assert showcase.fcfs.metrics.clubbed_tasks == 0
     assert showcase.fcfs.metrics.cross_department_blocks == 0
     assert [b.block_id for b in showcase.fcfs.blocks] == ["BLK-B", "BLK-C"]
 
-    # Greedy: selects A
-    assert showcase.greedy.metrics.tasks_scheduled == 2
+    # Greedy: selects A (3 tasks clubbed across 3 departments)
+    assert showcase.greedy.metrics.tasks_scheduled == 3
     assert showcase.greedy.metrics.tasks_unscheduled == 8
     assert showcase.greedy.metrics.blocks_generated == 1
     assert showcase.greedy.metrics.block_utilization_pct == 100.0
-    assert showcase.greedy.metrics.clubbed_tasks == 2
+    assert showcase.greedy.metrics.clubbed_tasks == 3
     assert showcase.greedy.metrics.cross_department_blocks == 1
     assert [b.block_id for b in showcase.greedy.blocks] == ["BLK-A"]
 
-    # DP: selects D, E, F, G
-    assert showcase.dp.metrics.tasks_scheduled == 6
+    # DP: selects D, E, F, G (7 tasks scheduled with optimal combination)
+    assert showcase.dp.metrics.tasks_scheduled == 7
     assert showcase.dp.metrics.tasks_unscheduled == 4
     assert showcase.dp.metrics.blocks_generated == 4
     assert showcase.dp.metrics.block_utilization_pct == 66.7
-    assert showcase.dp.metrics.clubbed_tasks == 3
-    assert showcase.dp.metrics.cross_department_blocks == 1
+    assert showcase.dp.metrics.clubbed_tasks == 5
+    assert showcase.dp.metrics.cross_department_blocks == 2
     assert [b.block_id for b in showcase.dp.blocks] == ["BLK-D", "BLK-E", "BLK-F", "BLK-G"]
+
+    # Strict performance ordering verification: FCFS < Greedy < DP
+    assert showcase.fcfs.metrics.tasks_scheduled < showcase.greedy.metrics.tasks_scheduled < showcase.dp.metrics.tasks_scheduled
+    assert showcase.fcfs.metrics.tasks_unscheduled > showcase.greedy.metrics.tasks_unscheduled > showcase.dp.metrics.tasks_unscheduled
+    assert showcase.fcfs.metrics.clubbed_tasks < showcase.greedy.metrics.clubbed_tasks < showcase.dp.metrics.clubbed_tasks
 
     # Decision steps verification
     assert len(showcase.fcfs.decision_steps) == 7
     assert len(showcase.greedy.decision_steps) == 7
     assert len(showcase.dp.decision_steps) == 11  # 7 evaluations + 4 backtracking steps
 
-    print("✓ test_showcase_scenario_deterministic_metrics passed perfectly (100% compliant with Part 7)")
+    print("✓ test_showcase_scenario_deterministic_metrics passed perfectly (FCFS < Greedy < DP verified)")
 
 
 if __name__ == "__main__":

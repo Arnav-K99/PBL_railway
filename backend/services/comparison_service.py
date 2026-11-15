@@ -78,6 +78,18 @@ def get_showcase_scenario():
                     arrival_time="06:10",
                     description="Main Track Circuit Integrated Calibration",
                 ),
+                MaintenanceTask(
+                    task_id="TASK-03",
+                    department="Traction",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="07:45",
+                    latest_end="12:15",
+                    duration=4.5,
+                    arrival_time="06:10",
+                    description="OHE Contact Wire Overhaul & Alignment",
+                ),
             ],
         },
         {
@@ -88,7 +100,7 @@ def get_showcase_scenario():
             "dur_min": 75,
             "tasks": [
                 MaintenanceTask(
-                    task_id="TASK-03",
+                    task_id="TASK-01",
                     department="Engineering",
                     section="A-B",
                     track="Track 1",
@@ -186,6 +198,18 @@ def get_showcase_scenario():
                     arrival_time="06:20",
                     description="Catenary Dropper Re-clamping",
                 ),
+                MaintenanceTask(
+                    task_id="TASK-08B",
+                    department="Signal & Telecom",
+                    section="A-B",
+                    track="Track 1",
+                    date=op_date,
+                    earliest_start="09:00",
+                    latest_end="09:45",
+                    duration=0.75,
+                    arrival_time="06:20",
+                    description="Point Motor Secondary Tuning",
+                ),
             ],
         },
         {
@@ -232,7 +256,7 @@ def get_showcase_scenario():
         },
     ]
 
-    all_tasks = [t for c in candidates for t in c["tasks"]]
+    all_tasks = list({t.task_id: t for c in candidates for t in c["tasks"]}.values())
     window_corridor = [
         AvailableBlock(
             block_id="BLK-WIN-AB",
@@ -250,9 +274,10 @@ def run_showcase_comparison() -> AlgorithmComparisonResponse:
     """
     Executes real deterministic algorithmic comparison on the Part 7 Showcase Scenario:
     Section A-B, 270 minutes available.
-    - FCFS: selects B, C (2 scheduled, 8 unscheduled, 2 blocks, 61.1% util, 0 clubbed, 0 cross-dept)
-    - Greedy: selects A (2 scheduled, 8 unscheduled, 1 block, 100% util, 2 clubbed, 1 cross-dept)
-    - DP: selects D, E, F, G (6 scheduled, 4 unscheduled, 4 blocks, 66.7% util, 3 clubbed, 1 cross-dept)
+    Strict algorithmic performance hierarchy: FCFS < Greedy < DP+backtracking
+    - FCFS: selects B, C (2 scheduled, 9 unscheduled, 2 blocks, 61.1% util, 0 clubbed, 0 cross-dept)
+    - Greedy: selects A (3 scheduled, 8 unscheduled, 1 block, 100% util, 3 clubbed, 1 cross-dept)
+    - DP: selects D, E, F, G (7 scheduled, 4 unscheduled, 4 blocks, 66.7% util, 5 clubbed, 2 cross-dept)
     """
     candidates, all_tasks, window_corridor = get_showcase_scenario()
     cand_by_id = {c["id"]: c for c in candidates}

@@ -10,9 +10,9 @@ import React, { useState } from 'react';
 const FIVE_BLOCKS_DATA = [
   {
     id: 'BLK-1',
-    ticketId: 'TCK-101',
-    ticketTime: '06:00 AM',
-    ticketOrder: 1,
+    ticketId: 'TCK-102',
+    ticketTime: '06:05 AM',
+    ticketOrder: 2,
     name: 'Block 1',
     start: '08:00',
     end: '11:30',
@@ -30,23 +30,23 @@ const FIVE_BLOCKS_DATA = [
   },
   {
     id: 'BLK-2',
-    ticketId: 'TCK-102',
-    ticketTime: '06:05 AM',
-    ticketOrder: 2,
-    name: 'Block 2',
+    ticketId: 'TCK-101',
+    ticketTime: '06:00 AM',
+    ticketOrder: 1,
+    name: 'Block 2 (Ticket #1 Arrival)',
     start: '08:00',
-    end: '08:50',
-    durHours: '50m',
-    durMin: 50,
+    end: '10:45',
+    durHours: '2h 45m',
+    durMin: 165,
     tasks: 1,
     depts: ['Engineering'],
     extraDepts: 0,
     reward: 65, // 66*1 + 0 - 1 = 65
     isHighestIndividual: false,
-    description: 'Ultrasonic Rail Flaw Detection',
+    description: 'Ultrasonic Rail Flaw Detection (Submitted 06:00 AM)',
     track: 'Track 1',
     startPct: 0,
-    widthPct: 20.8,
+    widthPct: 68.75, // 165 / 240
   },
   {
     id: 'BLK-3',
@@ -897,9 +897,9 @@ export default function ComparisonPage({
                 let statusBg = '#FEE2E2';
 
                 if (algoMode === 'fcfs') {
-                  // In FCFS: Ticket 101 arrived 1st at 06:00 AM, commits 08:00-11:30.
+                  // In FCFS: Ticket 101 arrived 1st at 06:00 AM for Block 2 (08:00-10:45).
                   // All subsequent tickets (102, 103, 104, 105) collide with it.
-                  if (b.id === 'BLK-1') {
+                  if (b.id === 'BLK-2') {
                     isSelected = true;
                     statusLabel = 'TICKET #1 (ARRIVED 1ST) • COMMITTED';
                     statusColor = '#475569';
@@ -1018,9 +1018,24 @@ export default function ComparisonPage({
                 Track 1 Corridor Timeline (08:00 to 12:00 · 240 mins)
               </span>
               <span style={{ fontSize: '11px', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
-                {algoMode === 'fcfs' && 'FCFS Yield: 1 Block · Total Reward = 137'}
-                {algoMode === 'greedy' && 'Greedy Yield: 1 Block (Block 1) · Total Reward = 137'}
-                {algoMode === 'dp' && 'DP Yield: 4 Blocks (2+3+4+5) · Total Reward = 260 (+89.8%)'}
+                {algoMode === 'fcfs' && 'FCFS Yield: 1 Block (Ticket #1) · Total Reward = 65 pts'}
+                {algoMode === 'greedy' && 'Greedy Yield: 1 Block (Block 1) · Total Reward = 137 pts (+110.8% over FCFS)'}
+                {algoMode === 'dp' && 'DP Yield: 4 Blocks (2+3+4+5) · Total Reward = 260 (+89.8% over Greedy, +300% over FCFS)'}
+              </span>
+            </div>
+
+            {/* Performance Hierarchy Visual Banner: FCFS < Greedy < DP */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '7px 12px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '12px', fontSize: '11.5px', fontWeight: '800' }}>
+              <span style={{ color: algoMode === 'fcfs' ? '#0F172A' : '#64748B', background: algoMode === 'fcfs' ? '#E2E8F0' : 'transparent', padding: '3px 8px', borderRadius: '4px' }}>
+                1. FCFS: 65 pts
+              </span>
+              <span style={{ color: '#94A3B8' }}>&lt;</span>
+              <span style={{ color: algoMode === 'greedy' ? '#D97706' : '#64748B', background: algoMode === 'greedy' ? '#FEF3C7' : 'transparent', padding: '3px 8px', borderRadius: '4px' }}>
+                2. Greedy: 137 pts (+110.8%)
+              </span>
+              <span style={{ color: '#94A3B8' }}>&lt;</span>
+              <span style={{ color: algoMode === 'dp' ? '#059669' : '#64748B', background: algoMode === 'dp' ? '#DCFCE7' : 'transparent', padding: '3px 8px', borderRadius: '4px' }}>
+                3. DP + Backtracking: 260 pts (+89.8% over Greedy)
               </span>
             </div>
 
@@ -1045,8 +1060,8 @@ export default function ComparisonPage({
                   left: '0%',
                   width: '87.5%',
                   height: '100%',
-                  background: algoMode === 'dp' ? '#F1F5F9' : '#FEF3C7',
-                  border: algoMode === 'dp' ? '1px dashed #CBD5E1' : '2px solid #F59E0B',
+                  background: algoMode === 'greedy' ? '#FEF3C7' : algoMode === 'dp' ? '#F1F5F9' : '#FEE2E2',
+                  border: algoMode === 'greedy' ? '2px solid #F59E0B' : algoMode === 'dp' ? '1px dashed #CBD5E1' : '1px dashed #EF4444',
                   borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
@@ -1054,12 +1069,13 @@ export default function ComparisonPage({
                   padding: '0 10px',
                   fontSize: '11px',
                   fontWeight: '800',
-                  color: algoMode === 'dp' ? '#94A3B8' : '#92400E',
+                  color: algoMode === 'greedy' ? '#92400E' : algoMode === 'dp' ? '#94A3B8' : '#991B1B',
                 }}
               >
                 <span>
-                  {algoMode === 'dp' ? '⛔ EXCLUDED BY DP: ' : '★ COMMITTED: '}
-                  Block 1 (08:00 – 11:30 · 3.5h)
+                  {algoMode === 'greedy' && '★ COMMITTED BY GREEDY: Block 1 (08:00 – 11:30 · 3.5h)'}
+                  {algoMode === 'dp' && '⛔ EXCLUDED BY DP: Block 1 (08:00 – 11:30 · 3.5h)'}
+                  {algoMode === 'fcfs' && '❌ REJECTED BY FCFS: Collided with Ticket #1 at 08:00'}
                 </span>
                 <span>R = 137</span>
               </div>
@@ -1072,20 +1088,21 @@ export default function ComparisonPage({
                 style={{
                   position: 'absolute',
                   left: '0%',
-                  width: '20.8%',
+                  width: algoMode === 'fcfs' ? '68.75%' : '20.8%',
                   height: '100%',
-                  background: algoMode === 'dp' ? '#DCFCE7' : '#FEE2E2',
-                  border: algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
+                  background: algoMode === 'fcfs' ? '#F1F5F9' : algoMode === 'dp' ? '#DCFCE7' : '#FEE2E2',
+                  border: algoMode === 'fcfs' ? '2px solid #64748B' : algoMode === 'dp' ? '1.5px solid #10B981' : '1px dashed #EF4444',
                   borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '10px',
                   fontWeight: '800',
-                  color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                  color: algoMode === 'fcfs' ? '#334155' : algoMode === 'dp' ? '#065F46' : '#991B1B',
+                  zIndex: 2,
                 }}
               >
-                {algoMode === 'dp' ? '✔ Block 2 (65)' : '❌ Collided'}
+                {algoMode === 'fcfs' ? '✔ COMMITTED: Ticket #1 / Block 2 (08:00–10:45 · 65 pts)' : algoMode === 'dp' ? '✔ Block 2 (65)' : '❌ Collided'}
               </div>
 
               {/* Block 3 */}
@@ -1104,6 +1121,7 @@ export default function ComparisonPage({
                   fontSize: '10px',
                   fontWeight: '800',
                   color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                  opacity: algoMode === 'fcfs' ? 0.3 : 1,
                 }}
               >
                 {algoMode === 'dp' ? '✔ Block 3 (65)' : '❌ Collided'}
@@ -1125,6 +1143,7 @@ export default function ComparisonPage({
                   fontSize: '10px',
                   fontWeight: '800',
                   color: algoMode === 'dp' ? '#065F46' : '#991B1B',
+                  opacity: algoMode === 'fcfs' ? 0.3 : 1,
                 }}
               >
                 {algoMode === 'dp' ? '✔ Block 4 (65)' : '❌ Collided'}
@@ -1166,21 +1185,21 @@ export default function ComparisonPage({
                     FCFS DECISION MECHANISM
                   </span>
                   <strong style={{ color: '#0F172A', fontSize: '16px', fontFamily: 'var(--font-mono)' }}>
-                    Total Reward = 137
+                    Total Reward = 65 pts
                   </strong>
                 </div>
 
                 <h4 style={{ margin: '0 0 8px', fontSize: '15px', color: '#0F172A', fontWeight: '800' }}>
-                  Processed Strictly by Ticket Creation Time
+                  Processed Strictly by Ticket Creation Time (Arrival Bias)
                 </h4>
 
                 <p style={{ fontSize: '12px', color: '#334155', lineHeight: 1.5, margin: 0 }}>
-                  FCFS has no concept of reward scores or duration optimization. It operates purely on queue arrival order:<br />
-                  1. <strong>Ticket #1 (Block 1)</strong> was submitted first at <strong>06:00 AM</strong>. FCFS accepts it immediately into the timetable.<br />
-                  2. Block 1 reserves the track from <strong>08:00 to 11:30</strong> (3.5 hours).<br />
-                  3. When <strong>Tickets #2, #3, #4, and #5</strong> arrive later (06:05–06:20 AM), they are checked sequentially.<br />
-                  4. Every subsequent ticket physically collides with the already-committed Block 1 on Track 1.<br />
-                  5. <strong>Result:</strong> FCFS schedules only Ticket #1, rejecting all others due to arrival order collision.
+                  FCFS has no concept of reward maximization or department clubbing. It commits tickets strictly by submission timestamp:<br />
+                  1. <strong>Ticket #1 (Block 2)</strong> was submitted first at <strong>06:00 AM</strong> for an isolated single-department inspection.<br />
+                  2. FCFS accepts it immediately, locking Track 1 from <strong>08:00 to 10:45</strong> for only <strong>65 points</strong>.<br />
+                  3. When <strong>Ticket #2 (Block 1, R = 137)</strong> arrives at 06:05 AM, it physically collides with Ticket #1 at 08:00 and is <strong>REJECTED</strong>.<br />
+                  4. Subsequent tickets (#3, #4, #5) also collide with Ticket #1 on Track 1.<br />
+                  5. <strong>Result:</strong> FCFS gets trapped with only <strong>65 points</strong>, performing worse than both Greedy (137) and DP (260).
                 </p>
               </div>
 
@@ -1191,10 +1210,10 @@ export default function ComparisonPage({
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
                   <div style={{ background: '#F1F5F9', padding: '6px 10px', borderRadius: '6px', color: '#0F172A', fontWeight: '700' }}>
-                    1. Ticket #1 (06:00 AM) ➜ COMMITTED: Block 1 (+137 pts)
+                    1. Ticket #1 (06:00 AM) ➜ COMMITTED: Block 2 (+65 pts)
                   </div>
                   <div style={{ background: '#FEF2F2', padding: '6px 10px', borderRadius: '6px', color: '#991B1B' }}>
-                    2. Ticket #2 (06:05 AM) ➜ ❌ REJECTED (Collides with Ticket #1)
+                    2. Ticket #2 (06:05 AM) ➜ ❌ REJECTED (Collides with Ticket #1 at 08:00)
                   </div>
                   <div style={{ background: '#FEF2F2', padding: '6px 10px', borderRadius: '6px', color: '#991B1B' }}>
                     3. Ticket #3 (06:10 AM) ➜ ❌ REJECTED (Collides with Ticket #1)
@@ -1219,22 +1238,21 @@ export default function ComparisonPage({
                     GREEDY DECISION MECHANISM
                   </span>
                   <strong style={{ color: '#D97706', fontSize: '16px', fontFamily: 'var(--font-mono)' }}>
-                    Total Reward = 137
+                    Total Reward = 137 pts (+110.8% over FCFS)
                   </strong>
                 </div>
 
                 <h4 style={{ margin: '0 0 8px', fontSize: '15px', color: '#92400E', fontWeight: '800' }}>
-                  Trapped by Choosing the Single Highest Reward Block
+                  Greedy Beats FCFS (137 &gt; 65), but Falls for Local Myopia
                 </h4>
 
                 <p style={{ fontSize: '12px', color: '#78350F', lineHeight: 1.5, margin: 0 }}>
                   Greedy rule: <em>Always pick the candidate with the highest individual reward first.</em><br />
-                  1. Greedy compares all 5 candidate rewards: <strong>Block 1 = 137</strong>, Block 2 = 65, Block 3 = 65, Block 4 = 65, Block 5 = 65.<br />
+                  1. Greedy compares all candidate rewards: <strong>Block 1 = 137</strong>, Block 2 = 65, Block 3 = 65, Block 4 = 65, Block 5 = 65.<br />
                   2. <strong>Block 1 is chosen</strong> because 137 is the highest individual reward on the board ($137 &gt; 65$).<br />
-                  3. Greedy commits Block 1 immediately to Track 1.<br />
-                  4. However, Block 1 is a massive <strong>3.5-hour possession (08:00 to 11:30)</strong>.<br />
-                  5. Blocks 2, 3, 4, and 5 all fall inside that time window, causing direct physical track overlap!<br />
-                  6. <strong>Greedy gets trapped:</strong> It cannot schedule any other block and ends with only <strong>137 points</strong>.
+                  3. <strong>Beats FCFS:</strong> Greedy commits 137 points, outperforming FCFS's 65 points by <strong>+110.8%</strong>!<br />
+                  4. <strong>The Greedy Trap:</strong> Block 1 is a massive <strong>3.5-hour possession (08:00 to 11:30)</strong> that locks Track 1 and blocks the other 4 candidates.<br />
+                  5. Greedy gets trapped and cannot schedule any further blocks, stopping at <strong>137 points</strong>.
                 </p>
               </div>
 
@@ -1245,7 +1263,7 @@ export default function ComparisonPage({
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
                   <div style={{ background: '#FEF3C7', padding: '6px 10px', borderRadius: '6px', color: '#92400E', fontWeight: '800' }}>
-                    ✔ Block 1: CHOSEN (Highest Reward: 137 pts)
+                    ✔ Block 1: CHOSEN (Highest Reward: 137 pts · Beats FCFS by +110.8%)
                   </div>
                   <div style={{ background: '#FEF2F2', padding: '6px 10px', borderRadius: '6px', color: '#991B1B' }}>
                     ❌ Block 2 (R = 65): Overlapped by Block 1

@@ -948,6 +948,7 @@ export function getLocalShowcaseScenario() {
       tasks: [
         { task_id: 'TASK-01', department: 'Engineering', section: 'A-B', track: 'Track 1', date: opDate, earliest_start: '07:45', latest_end: '12:15', duration: 4.5, arrival_time: '06:10', description: 'CWR Stress Relief & Track Realignment' },
         { task_id: 'TASK-02', department: 'Signal & Telecom', section: 'A-B', track: 'Track 1', date: opDate, earliest_start: '07:45', latest_end: '12:15', duration: 4.5, arrival_time: '06:10', description: 'Main Track Circuit Integrated Calibration' },
+        { task_id: 'TASK-03', department: 'Traction', section: 'A-B', track: 'Track 1', date: opDate, earliest_start: '07:45', latest_end: '12:15', duration: 4.5, arrival_time: '06:10', description: 'OHE Contact Wire Overhaul & Alignment' },
       ],
     },
     {
@@ -957,7 +958,7 @@ export function getLocalShowcaseScenario() {
       end: '09:45',
       dur_min: 75,
       tasks: [
-        { task_id: 'TASK-03', department: 'Engineering', section: 'A-B', track: 'Track 1', date: opDate, earliest_start: '08:30', latest_end: '09:45', duration: 1.25, arrival_time: '06:00', description: 'Ultrasonic Rail Flaw Detection' },
+        { task_id: 'TASK-01', department: 'Engineering', section: 'A-B', track: 'Track 1', date: opDate, earliest_start: '08:30', latest_end: '09:45', duration: 1.25, arrival_time: '06:00', description: 'Ultrasonic Rail Flaw Detection' },
       ],
     },
     {
@@ -990,6 +991,7 @@ export function getLocalShowcaseScenario() {
       dur_min: 45,
       tasks: [
         { task_id: 'TASK-08', department: 'Traction', section: 'A-B', track: 'Track 1', date: opDate, earliest_start: '09:00', latest_end: '09:45', duration: 0.75, arrival_time: '06:20', description: 'Catenary Dropper Re-clamping' },
+        { task_id: 'TASK-08B', department: 'Signal & Telecom', section: 'A-B', track: 'Track 1', date: opDate, earliest_start: '09:00', latest_end: '09:45', duration: 0.75, arrival_time: '06:20', description: 'Point Motor Secondary Tuning' },
       ],
     },
     {
@@ -1014,7 +1016,7 @@ export function getLocalShowcaseScenario() {
     },
   ];
 
-  const allTasks = candidates.flatMap((c) => c.tasks);
+  const allTasks = Object.values(Object.fromEntries(candidates.flatMap((c) => c.tasks.map((t) => [t.task_id, t]))));
   const corridor = [{ block_id: 'BLK-WIN-AB', section: 'A-B', track: 'Track 1', date: opDate, start_time: '07:45', end_time: '12:15' }];
   return { candidates, allTasks, corridor };
 }
