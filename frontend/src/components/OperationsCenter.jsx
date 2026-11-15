@@ -371,10 +371,10 @@ function PassengerTrain({ train, x, y, direction = 'EAST', isSelected = false, o
           width="100"
           height="16"
           rx="3"
-          fill="#0F172A"
-          stroke={isSelected ? '#F59E0B' : '#38BDF8'}
+          fill="#FFFFFF"
+          stroke={isSelected ? '#F59E0B' : '#0284C7'}
           strokeWidth="1.2"
-          opacity="0.95"
+          filter="drop-shadow(0 1px 3px rgba(0,0,0,0.15))"
         />
         <text
           x="0"
@@ -382,7 +382,7 @@ function PassengerTrain({ train, x, y, direction = 'EAST', isSelected = false, o
           fontSize="8.5"
           fontWeight="700"
           textAnchor="middle"
-          fill="#F8FAFC"
+          fill="#0F172A"
           fontFamily="monospace"
         >
           {isEast ? '🚆→' : '←🚆'} {train.train_id}
@@ -580,10 +580,10 @@ function FreightTrain({ train, x, y, direction = 'EAST', isSelected = false, onC
           width="110"
           height="16"
           rx="3"
-          fill="#0F172A"
-          stroke={isSelected ? '#F59E0B' : '#10B981'}
+          fill="#FFFFFF"
+          stroke={isSelected ? '#F59E0B' : '#059669'}
           strokeWidth="1.2"
-          opacity="0.95"
+          filter="drop-shadow(0 1px 3px rgba(0,0,0,0.15))"
         />
         <text
           x="0"
@@ -591,7 +591,7 @@ function FreightTrain({ train, x, y, direction = 'EAST', isSelected = false, onC
           fontSize="8"
           fontWeight="700"
           textAnchor="middle"
-          fill="#F8FAFC"
+          fill="#0F172A"
           fontFamily="monospace"
         >
           {isEast ? '🚂→' : '←🚂'} {train.train_id} [FREIGHT]
@@ -696,10 +696,10 @@ function MaintenanceWorkZone({ block, trackY, xStart = 380, xEnd = 960, isSelect
           width="280"
           height="22"
           rx="4"
-          fill="#1E293B"
-          stroke="#EF4444"
-          strokeWidth="1.5"
-          filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"
+          fill="#FFFFFF"
+          stroke="#DC2626"
+          strokeWidth="1.8"
+          filter="drop-shadow(0 2px 4px rgba(0,0,0,0.12))"
         />
         <text
           x="0"
@@ -707,7 +707,7 @@ function MaintenanceWorkZone({ block, trackY, xStart = 380, xEnd = 960, isSelect
           fontSize="9.5"
           fontWeight="800"
           textAnchor="middle"
-          fill="#FEE2E2"
+          fill="#991B1B"
           fontFamily="var(--font-sans)"
         >
           ⛔ POSSESSION ACTIVE: {block?.block_id} ({block?.start_time}–{block?.end_time}) · {block?.departments?.join(' + ')}
@@ -1026,8 +1026,9 @@ export default function OperationsCenter({
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <div
             style={{
-              background: '#0F172A',
-              color: '#38BDF8',
+              background: '#F8FAFC',
+              color: '#0F172A',
+              border: '1px solid #CBD5E1',
               padding: '6px 14px',
               borderRadius: 'var(--radius-xs)',
               fontFamily: 'var(--font-mono)',
@@ -1037,18 +1038,18 @@ export default function OperationsCenter({
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
             }}
           >
-            <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}>SIM CLOCK</span>
-            <span>{formatDigitalClock(simTime, tickSec)}</span>
+            <span style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase' }}>SIM CLOCK</span>
+            <span style={{ color: '#0284C7' }}>{formatDigitalClock(simTime, tickSec)}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '10px', fontSize: '11.5px' }}>
-            <span style={{ background: '#F1F5F9', padding: '4px 8px', borderRadius: '2px', fontWeight: '600' }}>
+            <span style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '4px 8px', borderRadius: '2px', fontWeight: '600' }}>
               ACTIVE TRAINS: <strong style={{ color: '#1D4ED8' }}>{trainSimStates.filter((t) => t.state === 'IN_TRANSIT').length}</strong>
             </span>
-            <span style={{ background: '#F1F5F9', padding: '4px 8px', borderRadius: '2px', fontWeight: '600' }}>
+            <span style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '4px 8px', borderRadius: '2px', fontWeight: '600' }}>
               ACTIVE BLOCKS: <strong style={{ color: '#DC2626' }}>{Object.values(trackSectionStates).filter((s) => s.status === 'MAINTENANCE_BLOCKED').length}</strong>
             </span>
           </div>
@@ -1061,18 +1062,18 @@ export default function OperationsCenter({
         style={{
           border: '1px solid var(--c-border)',
           borderRadius: 'var(--radius-xs)',
-          background: '#0A0F1D', // Ultra-deep slate railway night yard
-          color: '#F8FAFC',
+          background: '#FFFFFF', // Clean White Operations Dashboard
+          color: 'var(--c-text-primary)',
           overflow: 'hidden',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
         }}
       >
         {/* Schematic Control & Status Header Strip */}
         <div
           style={{
             padding: '10px 16px',
-            background: '#131D2E',
-            borderBottom: '1px solid #1E293B',
+            background: '#F8FAFC',
+            borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1082,52 +1083,52 @@ export default function OperationsCenter({
           }}
         >
           <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
-            <span style={{ fontWeight: '800', letterSpacing: '0.06em', color: '#38BDF8' }}>
+            <span style={{ fontWeight: '800', letterSpacing: '0.06em', color: '#0284C7' }}>
               MAINLINE CORRIDOR SCHEMATIC · 2.5D ELEVATION
             </span>
-            <span style={{ color: '#475569' }}>|</span>
+            <span style={{ color: '#CBD5E1' }}>|</span>
             <span>
-              TERMINAL A: <strong style={{ color: '#E2E8F0' }}>WEST JN (KM 42.0)</strong>
+              TERMINAL A: <strong style={{ color: '#0F172A' }}>WEST JN (KM 42.0)</strong>
             </span>
             <span style={{ color: '#94A3B8' }}>⟷</span>
             <span>
-              TERMINAL B: <strong style={{ color: '#E2E8F0' }}>EAST JN (KM 68.5)</strong>
+              TERMINAL B: <strong style={{ color: '#0F172A' }}>EAST JN (KM 68.5)</strong>
             </span>
           </div>
 
           {/* Operational Status Legend */}
-          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', fontSize: '11px', color: '#CBD5E1' }}>
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', fontSize: '11px', color: '#475569' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22C55E' }}></span>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16A34A' }}></span>
               Clear Track
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }}></span>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB' }}></span>
               Train Occupied
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#EF4444' }}></span>
+              <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#DC2626' }}></span>
               Maintenance Block
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }}></span>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D97706' }}></span>
               Upcoming
             </span>
           </div>
         </div>
 
         {/* HIGH-PRECISION VECTOR SVG RAILWAY SIMULATION SCENE */}
-        <div style={{ width: '100%', position: 'relative', background: '#090D16' }}>
+        <div style={{ width: '100%', position: 'relative', background: '#F8FAFC' }}>
           <svg
             viewBox="0 0 1360 480"
             style={{ width: '100%', height: 'auto', display: 'block' }}
           >
             <defs>
-              {/* Ballast Embankment Gradient */}
+              {/* Ballast Embankment Gradient for Daylight / White Scene */}
               <linearGradient id="ballast-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1E293B" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#111827" stopOpacity="0.95" />
-                <stop offset="100%" stopColor="#0B0F19" stopOpacity="1" />
+                <stop offset="0%" stopColor="#CBD5E1" stopOpacity="0.95" />
+                <stop offset="50%" stopColor="#94A3B8" stopOpacity="1" />
+                <stop offset="100%" stopColor="#64748B" stopOpacity="1" />
               </linearGradient>
 
               {/* Polished Steel Rail Gradient */}
@@ -1188,24 +1189,24 @@ export default function OperationsCenter({
                 y1={t.y - 52}
                 x2="1320"
                 y2={t.y - 52}
-                stroke="#64748B"
+                stroke="#94A3B8"
                 strokeWidth="0.8"
                 strokeDasharray="140 1"
-                opacity="0.6"
+                opacity="0.8"
               />
             ))}
 
             {/* Catenary Steel Lattice Masts at Regular 220px Intervals */}
             {[260, 480, 700, 920, 1140].map((mx) => (
-              <g key={`mast-${mx}`} opacity="0.45">
+              <g key={`mast-${mx}`} opacity="0.55">
                 {/* Vertical Lattice Steel Column */}
-                <line x1={mx} y1="30" x2={mx} y2="440" stroke="#475569" strokeWidth="2.5" />
-                <line x1={mx + 6} y1="30" x2={mx + 6} y2="440" stroke="#475569" strokeWidth="2.5" />
+                <line x1={mx} y1="30" x2={mx} y2="440" stroke="#64748B" strokeWidth="2.5" />
+                <line x1={mx + 6} y1="30" x2={mx + 6} y2="440" stroke="#64748B" strokeWidth="2.5" />
                 {/* Horizontal & Diagonal Lattice Braces */}
                 {[50, 100, 150, 200, 250, 300, 350, 400].map((by) => (
                   <React.Fragment key={by}>
-                    <line x1={mx} y1={by} x2={mx + 6} y2={by} stroke="#64748B" strokeWidth="1" />
-                    <line x1={mx} y1={by} x2={mx + 6} y2={by + 25} stroke="#64748B" strokeWidth="0.8" />
+                    <line x1={mx} y1={by} x2={mx + 6} y2={by} stroke="#94A3B8" strokeWidth="1" />
+                    <line x1={mx} y1={by} x2={mx + 6} y2={by + 25} stroke="#94A3B8" strokeWidth="0.8" />
                   </React.Fragment>
                 ))}
                 {/* Cantilever Registration Arms over tracks */}
@@ -1213,7 +1214,7 @@ export default function OperationsCenter({
                   <g key={`cantilever-${mx}-${t.id}`}>
                     <line x1={mx + 6} y1={t.y - 62} x2={mx + 28} y2={t.y - 52} stroke="#64748B" strokeWidth="1.2" />
                     {/* Porcelain Insulator */}
-                    <rect x={mx + 22} y={t.y - 56} width="6" height="3" fill="#38BDF8" rx="0.5" />
+                    <rect x={mx + 22} y={t.y - 56} width="6" height="3" fill="#0284C7" rx="0.5" />
                   </g>
                 ))}
               </g>
@@ -1223,18 +1224,18 @@ export default function OperationsCenter({
             {/* STATION A (WEST JUNCTION) - Left Platform Complex */}
             <g className="station-a-complex">
               {/* Platform Apron Base with Tactile Yellow Safety Coping Stones */}
-              <rect x="0" y="45" width="130" height="385" fill="#1E293B" stroke="#0F172A" strokeWidth="1.5" />
+              <rect x="0" y="45" width="130" height="385" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="1.5" />
               {/* Platform Safety Yellow Edge Line */}
-              <line x1="128" y1="45" x2="128" y2="430" stroke="#FBBF24" strokeWidth="3" />
-              <line x1="124" y1="45" x2="124" y2="430" stroke="#0F172A" strokeWidth="1" strokeDasharray="6 6" />
+              <line x1="128" y1="45" x2="128" y2="430" stroke="#F59E0B" strokeWidth="3.5" />
+              <line x1="124" y1="45" x2="124" y2="430" stroke="#1E293B" strokeWidth="1" strokeDasharray="6 6" />
 
               {/* Station Modern Canopy Roof Structure */}
-              <rect x="4" y="55" width="116" height="365" fill="#131D2E" rx="3" stroke="#334155" strokeWidth="1" />
+              <rect x="4" y="55" width="116" height="365" fill="#FFFFFF" rx="3" stroke="#CBD5E1" strokeWidth="1" />
               {/* Canopy Trusses */}
               {[90, 190, 290, 390].map((py) => (
                 <g key={`canopy-a-${py}`}>
-                  <line x1="8" y1={py - 25} x2="116" y2={py - 25} stroke="#475569" strokeWidth="1" />
-                  <line x1="8" y1={py + 25} x2="116" y2={py + 25} stroke="#475569" strokeWidth="1" />
+                  <line x1="8" y1={py - 25} x2="116" y2={py - 25} stroke="#94A3B8" strokeWidth="1" />
+                  <line x1="8" y1={py + 25} x2="116" y2={py + 25} stroke="#94A3B8" strokeWidth="1" />
                 </g>
               ))}
 
@@ -1250,15 +1251,15 @@ export default function OperationsCenter({
 
             {/* STATION B (EAST JUNCTION) - Right Platform Complex */}
             <g className="station-b-complex">
-              <rect x="1230" y="45" width="130" height="385" fill="#1E293B" stroke="#0F172A" strokeWidth="1.5" />
-              <line x1="1232" y1="45" x2="1232" y2="430" stroke="#FBBF24" strokeWidth="3" />
-              <line x1="1236" y1="45" x2="1236" y2="430" stroke="#0F172A" strokeWidth="1" strokeDasharray="6 6" />
+              <rect x="1230" y="45" width="130" height="385" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="1.5" />
+              <line x1="1232" y1="45" x2="1232" y2="430" stroke="#F59E0B" strokeWidth="3.5" />
+              <line x1="1236" y1="45" x2="1236" y2="430" stroke="#1E293B" strokeWidth="1" strokeDasharray="6 6" />
 
-              <rect x="1240" y="55" width="116" height="365" fill="#131D2E" rx="3" stroke="#334155" strokeWidth="1" />
+              <rect x="1240" y="55" width="116" height="365" fill="#FFFFFF" rx="3" stroke="#CBD5E1" strokeWidth="1" />
               {[90, 190, 290, 390].map((py) => (
                 <g key={`canopy-b-${py}`}>
-                  <line x1="1244" y1={py - 25} x2="1352" y2={py - 25} stroke="#475569" strokeWidth="1" />
-                  <line x1="1244" y1={py + 25} x2="1352" y2={py + 25} stroke="#475569" strokeWidth="1" />
+                  <line x1="1244" y1={py - 25} x2="1352" y2={py - 25} stroke="#94A3B8" strokeWidth="1" />
+                  <line x1="1244" y1={py + 25} x2="1352" y2={py + 25} stroke="#94A3B8" strokeWidth="1" />
                 </g>
               ))}
 
@@ -1290,10 +1291,10 @@ export default function OperationsCenter({
                       y={track.y - 25}
                       width="1260"
                       height="50"
-                      fill="#1E293B"
-                      opacity="0.3"
-                      stroke="#38BDF8"
-                      strokeWidth="1"
+                      fill="#E0F2FE"
+                      opacity="0.4"
+                      stroke="#0284C7"
+                      strokeWidth="1.2"
                     />
                   )}
 
@@ -1303,7 +1304,7 @@ export default function OperationsCenter({
                     fill="url(#ballast-gradient)"
                   />
                   {/* Ballast Lower Shoulder Slope */}
-                  <line x1="44" y1={track.y + 20} x2="1316" y2={track.y + 20} stroke="#0B0F19" strokeWidth="2.5" />
+                  <line x1="44" y1={track.y + 20} x2="1316" y2={track.y + 20} stroke="#475569" strokeWidth="2.5" />
 
                   {/* B. Individual Concrete Railway Sleepers / Ties */}
                   {sleeperPositions.map((sx) => (
@@ -1315,37 +1316,37 @@ export default function OperationsCenter({
                         width="5"
                         height="30"
                         rx="0.5"
-                        fill="#334155"
-                        stroke="#1E293B"
-                        strokeWidth="0.5"
+                        fill="#F1F5F9"
+                        stroke="#CBD5E1"
+                        strokeWidth="0.6"
                       />
                       {/* Beveled Top Highlight */}
-                      <line x1={sx - 2} y1={track.y - 15} x2={sx + 2} y2={track.y - 15} stroke="#475569" strokeWidth="0.8" />
+                      <line x1={sx - 2} y1={track.y - 15} x2={sx + 2} y2={track.y - 15} stroke="#FFFFFF" strokeWidth="0.8" />
                       {/* Pandrol Rail Fastener Clips on both rails */}
-                      <circle cx={sx} cy={track.y - 9} r="1.2" fill="#64748B" />
-                      <circle cx={sx} cy={track.y + 9} r="1.2" fill="#64748B" />
+                      <circle cx={sx} cy={track.y - 9} r="1.2" fill="#475569" />
+                      <circle cx={sx} cy={track.y + 9} r="1.2" fill="#475569" />
                     </g>
                   ))}
 
                   {/* C. Two Parallel Continuous Steel Rails (Gauge = 18px) */}
                   {/* Top Rail (Center y - 9) */}
                   <g className="rail-top">
-                    <line x1="40" y1={track.y - 9} x2="1320" y2={track.y - 9} stroke="#1E293B" strokeWidth="4.5" />
+                    <line x1="40" y1={track.y - 9} x2="1320" y2={track.y - 9} stroke="#334155" strokeWidth="4.5" />
                     <line x1="40" y1={track.y - 9} x2="1320" y2={track.y - 9} stroke="url(#steel-rail-gradient)" strokeWidth="2.8" />
                     <line x1="40" y1={track.y - 9.5} x2="1320" y2={track.y - 9.5} stroke="#FFFFFF" strokeWidth="0.9" opacity="0.9" />
                   </g>
 
                   {/* Bottom Rail (Center y + 9) */}
                   <g className="rail-bottom">
-                    <line x1="40" y1={track.y + 9} x2="1320" y2={track.y + 9} stroke="#1E293B" strokeWidth="4.5" />
+                    <line x1="40" y1={track.y + 9} x2="1320" y2={track.y + 9} stroke="#334155" strokeWidth="4.5" />
                     <line x1="40" y1={track.y + 9} x2="1320" y2={track.y + 9} stroke="url(#steel-rail-gradient)" strokeWidth="2.8" />
                     <line x1="40" y1={track.y + 8.5} x2="1320" y2={track.y + 8.5} stroke="#FFFFFF" strokeWidth="0.9" opacity="0.9" />
                   </g>
 
                   {/* D. Integrated Track Identifier Badge (Inside Platform Zone) */}
                   <g transform={`translate(14, ${track.y - 6})`}>
-                    <rect x="0" y="-8" width="102" height="16" rx="2" fill="#0F172A" stroke="#334155" strokeWidth="0.8" />
-                    <text x="51" y="3" fontSize="6.8" fontWeight="700" textAnchor="middle" fill="#E2E8F0" fontFamily="monospace">
+                    <rect x="0" y="-8" width="102" height="16" rx="2" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="1" />
+                    <text x="51" y="3" fontSize="6.8" fontWeight="700" textAnchor="middle" fill="#0F172A" fontFamily="monospace">
                       {track.name.split(' (')[0]} · {track.arrow} {track.speedLimit}
                     </text>
                   </g>
@@ -1438,8 +1439,8 @@ export default function OperationsCenter({
         {/* 3. SIMULATION PLAYBACK & TIMELINE CONTROLLER DOCK */}
         <div
           style={{
-            background: '#131D2E',
-            borderTop: '1px solid #1E293B',
+            background: '#FFFFFF',
+            borderTop: '1px solid #E2E8F0',
             padding: '12px 18px',
             display: 'flex',
             flexDirection: 'column',
@@ -1458,7 +1459,7 @@ export default function OperationsCenter({
                   borderColor: isPlaying ? '#B91C1C' : '#15803D',
                   color: '#FFFFFF',
                   fontWeight: '700',
-                  boxShadow: isPlaying ? '0 0 10px rgba(220,38,38,0.4)' : '0 0 10px rgba(22,163,74,0.4)',
+                  boxShadow: isPlaying ? '0 1px 3px rgba(220,38,38,0.3)' : '0 1px 3px rgba(22,163,74,0.3)',
                 }}
               >
                 {isPlaying ? '⏸ PAUSE' : '▶ PLAY'}
@@ -1467,7 +1468,7 @@ export default function OperationsCenter({
               <button
                 className="btn btn-secondary"
                 onClick={handleReset}
-                style={{ background: '#1E293B', color: '#E2E8F0', borderColor: '#334155' }}
+                style={{ background: '#F1F5F9', color: '#1E293B', borderColor: '#CBD5E1' }}
                 title="Reset simulation to 09:00:00"
               >
                 ↺ RESET
@@ -1477,7 +1478,7 @@ export default function OperationsCenter({
                 <button
                   className="btn btn-secondary"
                   onClick={() => handleStep(-15)}
-                  style={{ background: '#1E293B', color: '#CBD5E1', borderColor: '#334155', fontSize: '11px', padding: '4px 8px' }}
+                  style={{ background: '#F1F5F9', color: '#475569', borderColor: '#CBD5E1', fontSize: '11px', padding: '4px 8px' }}
                   title="Jump back 15 minutes"
                 >
                   -15m
@@ -1485,7 +1486,7 @@ export default function OperationsCenter({
                 <button
                   className="btn btn-secondary"
                   onClick={() => handleStep(15)}
-                  style={{ background: '#1E293B', color: '#CBD5E1', borderColor: '#334155', fontSize: '11px', padding: '4px 8px' }}
+                  style={{ background: '#F1F5F9', color: '#475569', borderColor: '#CBD5E1', fontSize: '11px', padding: '4px 8px' }}
                   title="Jump forward 15 minutes"
                 >
                   +15m
@@ -1495,15 +1496,15 @@ export default function OperationsCenter({
 
             {/* Speed Multipliers */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '600' }}>SPEED:</span>
+              <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>SPEED:</span>
               {[1, 2, 4, 8].map((s) => (
                 <button
                   key={s}
                   onClick={() => setSpeed(s)}
                   style={{
-                    background: speed === s ? '#2563EB' : '#1E293B',
-                    color: '#FFFFFF',
-                    border: '1px solid ' + (speed === s ? '#60A5FA' : '#334155'),
+                    background: speed === s ? '#2563EB' : '#F1F5F9',
+                    color: speed === s ? '#FFFFFF' : '#475569',
+                    border: '1px solid ' + (speed === s ? '#1D4ED8' : '#CBD5E1'),
                     borderRadius: '2px',
                     padding: '3px 8px',
                     fontSize: '11px',
@@ -1520,9 +1521,9 @@ export default function OperationsCenter({
             <button
               onClick={() => setShowTimetableDrawer((p) => !p)}
               style={{
-                background: showTimetableDrawer ? '#2563EB' : '#1E293B',
-                color: '#FFFFFF',
-                border: '1px solid #334155',
+                background: showTimetableDrawer ? '#2563EB' : '#F1F5F9',
+                color: showTimetableDrawer ? '#FFFFFF' : '#1E293B',
+                border: '1px solid ' + (showTimetableDrawer ? '#1D4ED8' : '#CBD5E1'),
                 borderRadius: 'var(--radius-xs)',
                 padding: '6px 12px',
                 fontSize: '11.5px',
@@ -1545,7 +1546,7 @@ export default function OperationsCenter({
               style={{
                 width: '100%',
                 cursor: 'ew-resize',
-                accentColor: '#38BDF8',
+                accentColor: '#0284C7',
               }}
             />
             {/* Hour Markers */}
