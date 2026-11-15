@@ -77,26 +77,27 @@ class CandidateBlock:
         )
         self.weight = self._calculate_weight()
 
-    def _calculate_weight(self) -> float:
+    def _calculate_weight(self, M: int = 7) -> float:
         """
-        Documented Lexicographic Objective Function W(i):
-        - Primary: Maximize unique scheduled tasks (+10,000 pts / task)
-        - Secondary: Cross-department clubbing bonus (+500 pts / additional dept)
-        - Tertiary: Minimize block count penalty (-100 pts per block opened)
-        - Quaternary: Window utilization / duration tiebreaker (+10 pts * duration)
-        Hard constraints (train safety, track compatibility) are evaluated
-        separately before candidate inclusion.
+        Official PBL Lexicographic Reward Objective:
+        R(B) = alpha * T_B + beta * C_B - 1
+        where beta = M + 1, alpha = 2 * M * beta + M + 1
+        For M = 7: beta = 8, alpha = 120
+        - T_B: unique tasks in block B (Task Coverage)
+        - C_B: max(0, distinct departments in B - 1) (Department Clubbing)
+        - Block Economy penalty: -1 per block opened
         """
         if not self.tasks:
             return 0.0
 
         task_count = len(self.tasks)
         dept_count = len(self.departments)
-        clubbing_bonus = max(0, dept_count - 1) * 500.0
-        block_penalty = -100.0
-        duration_tiebreaker = self.block_duration * 10.0
+        cb = max(0, dept_count - 1)
 
-        return float(task_count * 10000.0 + clubbing_bonus + block_penalty + duration_tiebreaker)
+        beta = M + 1
+        alpha = 2 * M * beta + M + 1
+
+        return float(alpha * task_count + beta * cb - 1)
 
 
 def compute_predecessors(candidates: List[CandidateBlock]) -> List[int]:

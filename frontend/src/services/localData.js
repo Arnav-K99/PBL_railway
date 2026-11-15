@@ -647,10 +647,11 @@ export function runLocalDPScheduler(
       const depts = [...new Set(fittingTasks.map((t) => t.department))];
       const maxDur = Math.max(...fittingTasks.map((t) => t.duration));
       const capacity = Number(((availEndMin - availStartMin) / 60.0).toFixed(2));
-      const clubbingBonus = Math.max(0, depts.length - 1) * 500.0;
-      const blockPenalty = -100.0;
-      const durationTiebreaker = maxDur * 10.0;
-      const weight = fittingTasks.length * 10000.0 + clubbingBonus + blockPenalty + durationTiebreaker;
+      const M = availableBlocks.length || 7;
+      const beta = M + 1;
+      const alpha = 2 * M * beta + M + 1;
+      const cb = Math.max(0, depts.length - 1);
+      const weight = alpha * fittingTasks.length + beta * cb - 1;
 
       feasibleCandidates.push({
         block_id: avail.block_id,
