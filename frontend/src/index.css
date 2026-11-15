@@ -985,6 +985,55 @@ table.ops-table tbody tr.selected-row {
   border: 1px solid #FECACA;
 }
 
+/* ==========================================================================
+   REWARD SYSTEM & MOTION METRICS
+   ========================================================================== */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4), 0 4px 16px rgba(16, 185, 129, 0.15);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0), 0 8px 24px rgba(16, 185, 129, 0.25);
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes shimmerGlow {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.reward-card-winner {
+  animation: pulseGlow 3.5s infinite ease-in-out;
+}
+
+.reward-shimmer {
+  background: linear-gradient(90deg, #10B981 0%, #34D399 50%, #059669 100%);
+  background-size: 200% 100%;
+  animation: shimmerGlow 4s infinite linear;
+}
+
+.metric-meter-track {
+  width: 100%;
+  height: 14px;
+  background: #F1F5F9;
+  border-radius: 7px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.metric-meter-fill {
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

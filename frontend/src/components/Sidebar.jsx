@@ -20,7 +20,6 @@ export default function Sidebar({ activePage, setActivePage }) {
       heading: 'ANALYSIS',
       items: [
         { id: 'comparison', label: 'Algorithm Comparison' },
-        { id: 'reports', label: 'Reports' },
       ],
     },
   ];

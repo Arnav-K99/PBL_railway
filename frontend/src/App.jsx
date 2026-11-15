@@ -5,7 +5,6 @@ import MaintenancePage from './components/MaintenancePage';
 import OptimizerPage from './components/OptimizerPage';
 import BlocksPage from './components/BlocksPage';
 import ComparisonPage from './components/ComparisonPage';
-import ReportsPage from './components/ReportsPage';
 import Dashboard from './components/Dashboard';
 import TrainsPage from './components/TrainsPage';
 
@@ -18,7 +17,7 @@ import {
 } from './services/localData';
 
 export default function App() {
-  const [activePage, setActivePage] = useState('operations');
+  const [activePage, setActivePage] = useState('comparison');
   const [tasks, setTasks] = useState(DEFAULT_TASKS);
   const [trains, setTrains] = useState(DEFAULT_TRAINS);
   const [availableBlocks, setAvailableBlocks] = useState(DEFAULT_AVAILABLE_BLOCKS);
@@ -272,14 +271,6 @@ export default function App() {
               onRunComparison={handleRunComparison}
               loading={comparisonLoading}
               trains={trains}
-            />
-          )}
-
-          {activePage === 'reports' && (
-            <ReportsPage
-              tasks={tasks}
-              trains={trains}
-              scheduleResult={scheduleResult}
             />
           )}
         </main>
